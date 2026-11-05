@@ -1,6 +1,6 @@
 import { lire, construire, empreinte, CANAUX } from "./emv.js";
 
-const VERSION = "0.1.0";
+const VERSION = "0.1.1";
 const KEY = "caabi.v1";
 const $ = id => document.getElementById(id);
 const PAYS = { SN: "Sénégal", CI: "Côte d'Ivoire", ML: "Mali", BF: "Burkina Faso", NE: "Niger", TG: "Togo", BJ: "Bénin", GW: "Guinée-Bissau" };
