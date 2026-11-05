@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Caabi · trousseau PI-SPI</title>
+<meta name="description" content="Range tes QR PI-SPI et ceux de tes proches et marchands. Tout reste sur ton téléphone.">
+<meta name="theme-color" content="#0b6b4f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="brand"><img src="icon.svg" alt="" width="34" height="34"><div><h1>Caabi</h1><p>Ton trousseau PI-SPI · rien ne quitte ton téléphone</p></div></div>
+  <button class="icon-btn" id="btnMenu" aria-label="Réglages et informations">⋯</button>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" id="tabMoi" aria-selected="true" data-tab="moi">Mes clés</button>
+  <button role="tab" id="tabCarnet" aria-selected="false" data-tab="carnet">Carnet</button>
+</nav>
+
+<main>
+  <input type="search" id="recherche" placeholder="Chercher un nom…" aria-label="Chercher dans le carnet" hidden>
+  <ul class="liste" id="liste"></ul>
+  <div class="vide" id="vide"></div>
+</main>
+
+<div class="actions">
+  <button class="btn primary big" id="btnScan">📷 Scanner un QR</button>
+  <button class="btn big" id="btnAjout">＋ Ajouter</button>
+</div>
+
+<!-- Scanner -->
+<dialog id="dScan" aria-labelledby="hScan">
+  <h2 id="hScan">Scanner un QR PI-SPI</h2>
+  <div class="cam"><video id="video" playsinline muted></video><div class="viseur" aria-hidden="true"></div></div>
+  <p class="aide" id="scanEtat">Vise le QR. Tu peux aussi choisir une capture d'écran.</p>
+  <div class="row">
+    <label class="btn">🖼️ Choisir une image<input type="file" accept="image/*" id="fichier" hidden></label>
+    <button class="btn" data-close>Annuler</button>
+  </div>
+</dialog>
+
+<!-- Résultat d'un scan / ajout -->
+<dialog id="dRes" aria-labelledby="hRes">
+  <h2 id="hRes">QR lu</h2>
+  <div id="resInfo"></div>
+  <form id="fSave" method="dialog">
+    <label>Nom <input name="nom" required maxlength="40" placeholder="ex. Tata Awa, Boutique Modou, Mon Wave"></label>
+    <fieldset class="cats"><legend>C'est…</legend>
+      <label><input type="radio" name="cat" value="moi"> à moi</label>
+      <label><input type="radio" name="cat" value="proche" checked> un proche</label>
+      <label><input type="radio" name="cat" value="marchand"> un marchand</label>
+    </fieldset>
+    <label>Compte / app <input name="app" maxlength="30" placeholder="ex. Wave, Orange Money, Ecobank (facultatif)"></label>
+    <div class="row"><button class="btn primary" id="btnSave" value="save">Enregistrer</button><button class="btn" value="cancel" formnovalidate>Annuler</button></div>
+  </form>
+</dialog>
+
+<!-- Ajout manuel -->
+<dialog id="dAjout" aria-labelledby="hAjout">
+  <h2 id="hAjout">Ajouter avec une adresse de paiement</h2>
+  <p class="aide">Ton app (Wave, Orange Money, banque…) peut afficher ton <b>adresse de paiement PI-SPI</b> : 36 caractères comme <code>341c3e1b-4312-49ec-b75e-4c8c74c10fd7</code>. Colle-la ici, Caabi fabrique le QR selon la norme BCEAO.</p>
+  <form id="fAjout" method="dialog">
+    <label>Adresse de paiement (SHID) <input name="alias" required autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></label>
+    <label>Pays du compte <select name="pays">
+      <option value="SN">Sénégal</option><option value="CI">Côte d'Ivoire</option><option value="ML">Mali</option><option value="BF">Burkina Faso</option>
+      <option value="NE">Niger</option><option value="TG">Togo</option><option value="BJ">Bénin</option><option value="GW">Guinée-Bissau</option></select></label>
+    <p class="erreur" id="ajoutErr" hidden></p>
+    <div class="row"><button class="btn primary" value="ok">Continuer</button><button class="btn" value="cancel" formnovalidate>Annuler</button></div>
+  </form>
+</dialog>
+
+<!-- Affichage d'une clé -->
+<dialog id="dCle" class="plein" aria-labelledby="hCle">
+  <div class="cle-tete"><h2 id="hCle"></h2><button class="icon-btn" data-close aria-label="Fermer">✕</button></div>
+  <p class="cle-sous" id="cleSous"></p>
+  <div class="qr" id="cleQr"></div>
+  <p class="empreinte">Code de vérification <b id="cleEmp"></b></p>
+  <div class="montant-box">
+    <label>Montant demandé (facultatif) <input id="cleMontant" type="number" inputmode="numeric" min="1" step="1" placeholder="F CFA"></label>
+  </div>
+  <p class="aide" id="cleAide"></p>
+  <div class="row wrap">
+    <button class="btn" id="btnCopier">📋 Copier l'adresse</button>
+    <button class="btn" id="btnRenommer">✏️ Renommer</button>
+    <button class="btn danger" id="btnSuppr">🗑️ Supprimer</button>
+  </div>
+</dialog>
+
+<!-- Réglages -->
+<dialog id="dMenu" aria-labelledby="hMenu">
+  <h2 id="hMenu">Caabi</h2>
+  <p>Caabi (« clé » en wolof) range tes QR PI-SPI et ceux des gens que tu paies souvent.</p>
+  <ul class="puces">
+    <li><b>Rien n'est envoyé</b> : pas de compte, pas de serveur, pas de statistiques. Tes clés restent dans ce navigateur.</li>
+    <li><b>Caabi ne paie pas</b> : il montre ou lit un QR. Le paiement se fait toujours dans ton app (Wave, Orange Money, banque…).</li>
+    <li><b>Avant de payer</b>, vérifie toujours le nom du bénéficiaire affiché par ton app.</li>
+    <li>Projet citoyen, sans lien avec la BCEAO ni avec les opérateurs.</li>
+  </ul>
+  <h3>Sauvegarde</h3>
+  <p class="aide">Si tu changes de téléphone ou vides le navigateur, tes clés disparaissent. Garde une copie.</p>
+  <div class="row wrap">
+    <button class="btn" id="btnExport">⬇️ Exporter mes clés</button>
+    <label class="btn">⬆️ Importer<input type="file" accept="application/json,.json" id="fImport" hidden></label>
+  </div>
+  <h3>Tester</h3>
+  <div class="row wrap">
+    <button class="btn" id="btnExemple">Afficher un QR d'exemple</button>
+    <button class="btn danger" id="btnTout">Tout effacer</button>
+  </div>
+  <p class="aide">Code source ouvert : <a href="https://github.com/dofbi/caabi" id="lienCode" rel="noopener">github.com/dofbi/caabi</a> · version <span id="version"></span></p>
+  <div class="row"><button class="btn primary" data-close>Fermer</button></div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="vendor/qrcode.js"></script>
+<script src="vendor/jsQR.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
