@@ -4,6 +4,7 @@ Caabi (« clé » en wolof) est une petite application web (PWA) pour ranger ses
 
 - **Mes clés** : enregistre tes propres QR PI-SPI (Wave, Orange Money, banque…) et affiche-les en grand pour te faire payer, avec un montant si tu veux.
 - **Carnet** : scanne et enregistre le QR d'un proche ou d'un marchand.
+- **Partager l'image** : exporte une image prête à envoyer (nom, QR avec le logo Caabi au centre, montant, code de vérification), fabriquée sur le téléphone. Le QR utilise la correction d'erreur H pour rester lisible malgré le logo.
 - **Vérification** : chaque QR est contrôlé (identifiant de schéma `int.bceao.pi` et somme de contrôle CRC16) avant d'être enregistré.
 
 ## Ce que Caabi ne fait pas

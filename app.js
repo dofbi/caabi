@@ -1,6 +1,6 @@
 import { lire, construire, empreinte, CANAUX } from "./emv.js";
 
-const VERSION = "0.1.1";
+const VERSION = "0.2.0";
 const KEY = "caabi.v1";
 const $ = id => document.getElementById(id);
 const PAYS = { SN: "Sénégal", CI: "Côte d'Ivoire", ML: "Mali", BF: "Burkina Faso", NE: "Niger", TG: "Togo", BJ: "Bénin", GW: "Guinée-Bissau" };
@@ -21,9 +21,44 @@ const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) 
 const court = a => a ? a.slice(0, 8) + "…" + a.slice(-4) : "";
 const fcfa = n => new Intl.NumberFormat("fr-FR").format(n) + " F";
 
+// Logo Caabi (la clé) au centre du QR. Correction d'erreur H : le QR reste lisible malgré le logo.
+// On n'utilise pas le logo officiel PI-SPI/BCEAO : Caabi est un projet citoyen indépendant.
+const LOGO = '<rect width="64" height="64" rx="14" fill="#0b6b4f"/><circle cx="22" cy="32" r="11" fill="none" stroke="#fff" stroke-width="6"/><path d="M33 32h21M46 32v9M53 32v6" stroke="#fff" stroke-width="6" stroke-linecap="round"/>';
+const CELL = 8, MARGE = 4;
+function faireQr(payload) { const q = qrcode(0, "H"); q.addData(payload); q.make(); return q; }
 function qrSvg(payload) {
-  const q = qrcode(0, "M"); q.addData(payload); q.make();
-  return q.createSvgTag({ cellSize: 8, margin: 4, scalable: true });
+  const q = faireQr(payload), n = q.getModuleCount(), taille = (n + 2 * MARGE) * CELL;
+  const l = Math.round(taille * 0.2), x = (taille - l) / 2, pad = CELL;
+  const centre = `<rect x="${x - pad}" y="${x - pad}" width="${l + 2 * pad}" height="${l + 2 * pad}" rx="${pad * 2}" fill="#fff"/>`
+    + `<svg x="${x}" y="${x}" width="${l}" height="${l}" viewBox="0 0 64 64">${LOGO}</svg>`;
+  return q.createSvgTag({ cellSize: CELL, margin: MARGE, scalable: true }).replace(/<\/svg>\s*$/, centre + "</svg>");
+}
+
+// Image à partager : nom, QR avec logo, code de vérification, montant. Fabriquée sur le téléphone, rien n'est envoyé.
+function chargerImage(src) { return new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = src; }); }
+async function imageCle(c, payload, montant) {
+  const W = 1080, H = 1500, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const g = cv.getContext("2d"), font = (w, px) => `${w} ${px}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+  g.fillStyle = "#0b6b4f"; g.fillRect(0, 0, W, H);
+  g.fillStyle = "#fff"; g.beginPath(); g.roundRect(40, 40, W - 80, H - 80, 48); g.fill();
+  g.textAlign = "center"; g.fillStyle = "#14231d";
+  g.font = font(800, 64); g.fillText(c.nom.slice(0, 28), W / 2, 150);
+  g.fillStyle = "#5b6b64"; g.font = font(500, 34);
+  g.fillText([c.app, PAYS[c.pays] || c.pays, "PI-SPI"].filter(Boolean).join(" · "), W / 2, 205);
+  const q = faireQr(payload), n = q.getModuleCount(), cote = 860, m = cote / (n + 8), x0 = (W - cote) / 2, y0 = 250;
+  g.fillStyle = "#000";
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.isDark(r, k)) g.fillRect(Math.floor(x0 + (k + 4) * m), Math.floor(y0 + (r + 4) * m), Math.ceil(m), Math.ceil(m));
+  const l = cote * 0.2, lx = W / 2 - l / 2, ly = y0 + cote / 2 - l / 2;
+  g.fillStyle = "#fff"; g.beginPath(); g.roundRect(lx - m, ly - m, l + 2 * m, l + 2 * m, 2 * m); g.fill();
+  try { g.drawImage(await chargerImage("icon-512.png"), lx, ly, l, l); } catch {}
+  let y = y0 + cote + 70;
+  if (montant) { g.fillStyle = "#14231d"; g.font = font(800, 56); g.fillText(fcfa(montant), W / 2, y); y += 70; }
+  g.fillStyle = "#14231d"; g.font = font(600, 36); g.fillText(`Code de vérification ${empreinte(c)}`, W / 2, y); y += 70;
+  g.fillStyle = "#5b6b64"; g.font = font(500, 30);
+  g.fillText("Scanne avec ton app (Wave, Orange Money, banque…)", W / 2, y); y += 42;
+  g.fillText("et vérifie le nom affiché avant de payer.", W / 2, y);
+  g.font = font(600, 26); g.fillStyle = "#0b6b4f"; g.fillText("Fait avec Caabi · projet citoyen, sans lien avec la BCEAO", W / 2, H - 80);
+  return new Promise(ok => cv.toBlob(ok, "image/png"));
 }
 
 // ---------- Liste ----------
@@ -189,7 +224,7 @@ $("fAjout").addEventListener("submit", e => {
 });
 
 // ---------- Affichage d'une clé ----------
-let cleOuverte = null, verrou = null;
+let cleOuverte = null, verrou = null, qrAffiche = null;
 function dessinerQr(c) {
   const m = Number($("cleMontant").value);
   let payload = c.payload, aide;
@@ -202,6 +237,7 @@ function dessinerQr(c) {
       : "Pour payer : copie l'adresse et colle-la dans ton app, ou montre ce QR à un autre téléphone. Vérifie le nom affiché avant de valider.";
   }
   $("cleQr").innerHTML = qrSvg(payload);
+  qrAffiche = { payload, montant: c.cat === "moi" && Number.isInteger(m) && m > 0 ? m : null };
   $("cleAide").textContent = aide + (c.genere ? " QR construit à partir de l'adresse saisie." : "");
 }
 
@@ -223,6 +259,17 @@ $("dCle").addEventListener("close", () => { verrou?.release?.(); verrou = null; 
 $("btnCopier").addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(cleOuverte.alias); toast("Adresse copiée. Colle-la dans ton app."); }
   catch { prompt("Copie l'adresse :", cleOuverte.alias); }
+});
+$("btnImage").addEventListener("click", async () => {
+  const c = cleOuverte; if (!c || !qrAffiche) return;
+  const blob = await imageCle(c, qrAffiche.payload, qrAffiche.montant);
+  const nomF = "caabi-" + c.nom.normalize("NFD").replace(/[^\w]+/g, "-").replace(/^-|-$/g, "").toLowerCase() + ".png";
+  const f = new File([blob], nomF, { type: "image/png" });
+  if (navigator.canShare?.({ files: [f] })) {
+    try { await navigator.share({ files: [f], title: c.nom }); return; } catch (e) { if (e.name === "AbortError") return; }
+  }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = nomF; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Image enregistrée");
 });
 $("btnRenommer").addEventListener("click", () => {
   const n = prompt("Nouveau nom :", cleOuverte.nom);
