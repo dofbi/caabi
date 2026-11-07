@@ -1,6 +1,6 @@
 import { lire, construire, empreinte, CANAUX } from "./emv.js";
 
-const VERSION = "0.2.0";
+const VERSION = "0.2.1";
 const KEY = "caabi.v1";
 const $ = id => document.getElementById(id);
 const PAYS = { SN: "Sénégal", CI: "Côte d'Ivoire", ML: "Mali", BF: "Burkina Faso", NE: "Niger", TG: "Togo", BJ: "Bénin", GW: "Guinée-Bissau" };
@@ -27,7 +27,7 @@ const LOGO = '<rect width="64" height="64" rx="14" fill="#0b6b4f"/><circle cx="2
 const CELL = 8, MARGE = 4;
 function faireQr(payload) { const q = qrcode(0, "H"); q.addData(payload); q.make(); return q; }
 function qrSvg(payload) {
-  const q = faireQr(payload), n = q.getModuleCount(), taille = (n + 2 * MARGE) * CELL;
+  const q = faireQr(payload), n = q.getModuleCount(), taille = n * CELL + 2 * MARGE; // qrcode-generator : marge en pixels, pas en modules
   const l = Math.round(taille * 0.2), x = (taille - l) / 2, pad = CELL;
   const centre = `<rect x="${x - pad}" y="${x - pad}" width="${l + 2 * pad}" height="${l + 2 * pad}" rx="${pad * 2}" fill="#fff"/>`
     + `<svg x="${x}" y="${x}" width="${l}" height="${l}" viewBox="0 0 64 64">${LOGO}</svg>`;
