@@ -1,6 +1,6 @@
 import { lire, construire, empreinte, CANAUX } from "./emv.js";
 
-const VERSION = "0.2.1";
+const VERSION = "0.3.0";
 const KEY = "caabi.v1";
 const $ = id => document.getElementById(id);
 const PAYS = { SN: "Sénégal", CI: "Côte d'Ivoire", ML: "Mali", BF: "Burkina Faso", NE: "Niger", TG: "Togo", BJ: "Bénin", GW: "Guinée-Bissau" };
@@ -26,18 +26,21 @@ const fcfa = n => new Intl.NumberFormat("fr-FR").format(n) + " F";
 const LOGO = '<rect width="64" height="64" rx="14" fill="#0b6b4f"/><circle cx="22" cy="32" r="11" fill="none" stroke="#fff" stroke-width="6"/><path d="M33 32h21M46 32v9M53 32v6" stroke="#fff" stroke-width="6" stroke-linecap="round"/>';
 const CELL = 8, MARGE = 4;
 function faireQr(payload) { const q = qrcode(0, "H"); q.addData(payload); q.make(); return q; }
-function qrSvg(payload) {
+// Logo du commerçant : image choisie sur le téléphone, réduite à 192 px, gardée en data URL PNG dans localStorage.
+const logoOk = v => typeof v === "string" && /^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(v) && v.length < 200000;
+function qrSvg(payload, logo) {
   const q = faireQr(payload), n = q.getModuleCount(), taille = n * CELL + 2 * MARGE; // qrcode-generator : marge en pixels, pas en modules
   const l = Math.round(taille * 0.2), x = (taille - l) / 2, pad = CELL;
   const centre = `<rect x="${x - pad}" y="${x - pad}" width="${l + 2 * pad}" height="${l + 2 * pad}" rx="${pad * 2}" fill="#fff"/>`
-    + `<svg x="${x}" y="${x}" width="${l}" height="${l}" viewBox="0 0 64 64">${LOGO}</svg>`;
+    + (logoOk(logo) ? `<image x="${x}" y="${x}" width="${l}" height="${l}" href="${logo}" preserveAspectRatio="xMidYMid meet"/>`
+      : `<svg x="${x}" y="${x}" width="${l}" height="${l}" viewBox="0 0 64 64">${LOGO}</svg>`);
   return q.createSvgTag({ cellSize: CELL, margin: MARGE, scalable: true }).replace(/<\/svg>\s*$/, centre + "</svg>");
 }
 
 // Image à partager : nom, QR avec logo, code de vérification, montant. Fabriquée sur le téléphone, rien n'est envoyé.
 function chargerImage(src) { return new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = src; }); }
-async function imageCle(c, payload, montant) {
-  const W = 1080, H = 1500, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+async function imageCle(c, payload, montant, affiche) {
+  const W = 1080, H = affiche ? 1840 : 1500, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const g = cv.getContext("2d"), font = (w, px) => `${w} ${px}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
   g.fillStyle = "#0b6b4f"; g.fillRect(0, 0, W, H);
   g.fillStyle = "#fff"; g.beginPath(); g.roundRect(40, 40, W - 80, H - 80, 48); g.fill();
@@ -50,13 +53,24 @@ async function imageCle(c, payload, montant) {
   for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.isDark(r, k)) g.fillRect(Math.floor(x0 + (k + 4) * m), Math.floor(y0 + (r + 4) * m), Math.ceil(m), Math.ceil(m));
   const l = cote * 0.2, lx = W / 2 - l / 2, ly = y0 + cote / 2 - l / 2;
   g.fillStyle = "#fff"; g.beginPath(); g.roundRect(lx - m, ly - m, l + 2 * m, l + 2 * m, 2 * m); g.fill();
-  try { g.drawImage(await chargerImage("icon-512.png"), lx, ly, l, l); } catch {}
+  try {
+    const im = await chargerImage(logoOk(c.logo) ? c.logo : "icon-512.png"), k = Math.min(l / im.width, l / im.height);
+    g.drawImage(im, lx + (l - im.width * k) / 2, ly + (l - im.height * k) / 2, im.width * k, im.height * k);
+  } catch {}
   let y = y0 + cote + 70;
   if (montant) { g.fillStyle = "#14231d"; g.font = font(800, 56); g.fillText(fcfa(montant), W / 2, y); y += 70; }
   g.fillStyle = "#14231d"; g.font = font(600, 36); g.fillText(`Code de vérification ${empreinte(c)}`, W / 2, y); y += 70;
   g.fillStyle = "#5b6b64"; g.font = font(500, 30);
   g.fillText("Scanne avec ton app (Wave, Orange Money, banque…)", W / 2, y); y += 42;
   g.fillText("et vérifie le nom affiché avant de payer.", W / 2, y);
+  if (affiche) {
+    // Message sur les frais : règle BCEAO (gratuit jusqu'à 8 000 F par jour, réception gratuite).
+    y += 40; g.fillStyle = "#e3f1ea"; g.beginPath(); g.roundRect(90, y, W - 180, 270, 32); g.fill();
+    g.fillStyle = "#0b6b4f"; g.font = font(800, 50); g.fillText("Payez-moi par PI-SPI", W / 2, y + 70);
+    g.fillStyle = "#14231d"; g.font = font(500, 32); g.fillText("depuis Wave, Orange Money ou votre banque", W / 2, y + 120);
+    g.font = font(800, 40); g.fillText("0 F de frais jusqu'à 8 000 F par jour", W / 2, y + 180);
+    g.fillStyle = "#5b6b64"; g.font = font(500, 26); g.fillText("Règle BCEAO · vérifiez les frais sur votre écran avant de valider", W / 2, y + 230);
+  }
   g.font = font(600, 26); g.fillStyle = "#0b6b4f"; g.fillText("Fait avec Caabi · projet citoyen, sans lien avec la BCEAO", W / 2, H - 80);
   return new Promise(ok => cv.toBlob(ok, "image/png"));
 }
@@ -236,7 +250,8 @@ function dessinerQr(c) {
       ? "Montre ce QR à la personne qui te paie. Elle le scanne avec son app."
       : "Pour payer : copie l'adresse et colle-la dans ton app, ou montre ce QR à un autre téléphone. Vérifie le nom affiché avant de valider.";
   }
-  $("cleQr").innerHTML = qrSvg(payload);
+  $("cleQr").innerHTML = qrSvg(payload, c.logo);
+  $("btnLogoRetirer").hidden = !c.logo;
   qrAffiche = { payload, montant: c.cat === "moi" && Number.isInteger(m) && m > 0 ? m : null };
   $("cleAide").textContent = aide + (c.genere ? " QR construit à partir de l'adresse saisie." : "");
 }
@@ -249,6 +264,8 @@ async function ouvrirCle(id) {
   $("cleEmp").textContent = empreinte(c);
   $("cleMontant").value = "";
   $("cleMontant").closest(".montant-box").hidden = c.cat !== "moi";
+  $("clePerso").hidden = c.cat !== "moi";
+  $("cleAffiche").checked = !!c.affiche;
   dessinerQr(c);
   $("dCle").showModal();
   try { verrou = await navigator.wakeLock?.request("screen"); } catch { verrou = null; }
@@ -262,7 +279,7 @@ $("btnCopier").addEventListener("click", async () => {
 });
 $("btnImage").addEventListener("click", async () => {
   const c = cleOuverte; if (!c || !qrAffiche) return;
-  const blob = await imageCle(c, qrAffiche.payload, qrAffiche.montant);
+  const blob = await imageCle(c, qrAffiche.payload, qrAffiche.montant, c.cat === "moi" && $("cleAffiche").checked);
   const nomF = "caabi-" + c.nom.normalize("NFD").replace(/[^\w]+/g, "-").replace(/^-|-$/g, "").toLowerCase() + ".png";
   const f = new File([blob], nomF, { type: "image/png" });
   if (navigator.canShare?.({ files: [f] })) {
@@ -271,6 +288,21 @@ $("btnImage").addEventListener("click", async () => {
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = nomF; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Image enregistrée");
 });
+$("cleAffiche").addEventListener("change", e => { if (cleOuverte) { cleOuverte.affiche = e.target.checked; sauver(); } });
+$("fLogo").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f || !cleOuverte) return;
+  try {
+    const bmp = await createImageBitmap(f), T = 192, k = Math.min(T / bmp.width, T / bmp.height);
+    const cv = document.createElement("canvas"); cv.width = T; cv.height = T;
+    const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, T, T);
+    g.drawImage(bmp, (T - bmp.width * k) / 2, (T - bmp.height * k) / 2, bmp.width * k, bmp.height * k);
+    let url = cv.toDataURL("image/png");
+    if (url.length >= 200000) url = cv.toDataURL("image/jpeg", 0.85);
+    cleOuverte.logo = url; sauver(); dessinerQr(cleOuverte); toast("Logo ajouté. Vérifie que le QR se scanne bien.");
+  } catch { toast("Image illisible"); }
+});
+$("btnLogoRetirer").addEventListener("click", () => { if (!cleOuverte) return; delete cleOuverte.logo; sauver(); dessinerQr(cleOuverte); toast("Logo Caabi remis"); });
+$("btnConseils").addEventListener("click", () => $("dConseils").showModal());
 $("btnRenommer").addEventListener("click", () => {
   const n = prompt("Nouveau nom :", cleOuverte.nom);
   if (n && n.trim()) { cleOuverte.nom = n.trim().slice(0, 40); sauver(); $("hCle").textContent = cleOuverte.nom; }
@@ -296,7 +328,7 @@ $("fImport").addEventListener("change", async e => {
     let n = 0;
     for (const c of d.cles || []) {
       if (!lire(c.payload).ok || etat.cles.some(x => x.payload === c.payload && x.nom === c.nom)) continue;
-      etat.cles.push({ id: uid(), nom: String(c.nom || "Sans nom").slice(0, 40), cat: CAT[c.cat] ? c.cat : "proche", app: String(c.app || "").slice(0, 30), payload: c.payload, alias: lire(c.payload).alias, pays: lire(c.payload).pays, canal: lire(c.payload).canal, genere: !!c.genere, ajoute: c.ajoute || Date.now() });
+      etat.cles.push({ id: uid(), nom: String(c.nom || "Sans nom").slice(0, 40), cat: CAT[c.cat] ? c.cat : "proche", app: String(c.app || "").slice(0, 30), payload: c.payload, alias: lire(c.payload).alias, pays: lire(c.payload).pays, canal: lire(c.payload).canal, genere: !!c.genere, ajoute: c.ajoute || Date.now(), ...(logoOk(c.logo) ? { logo: c.logo } : {}), ...(c.affiche ? { affiche: true } : {}) });
       n++;
     }
     sauver(); rendre(); toast(n + " clé(s) importée(s)");
