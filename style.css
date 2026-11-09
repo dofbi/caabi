@@ -92,3 +92,5 @@ label.check input{margin-top:3px;width:18px;height:18px;flex:none}
 .duo>div>p:last-child{background:#fdf1dc}
 .duo-h b{padding:6px 10px;font-size:.95rem}
 @media (prefers-color-scheme:dark){.duo>div>p:first-child{background:#173a2e}.duo>div>p:last-child{background:#3a2e17}}
+.duo>.duo-star{grid-template-columns:1fr}
+.duo-star p{background:transparent!important;border:2px solid #0b6b4f;font-size:.95rem!important}
