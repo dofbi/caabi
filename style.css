@@ -85,3 +85,10 @@ a{color:var(--accent)}
 .perso{max-width:420px;margin:8px auto 0}
 label.check{display:flex;align-items:flex-start;gap:8px;font-weight:500}
 label.check input{margin-top:3px;width:18px;height:18px;flex:none}
+.duo{display:grid;gap:6px;margin:12px 0}
+.duo>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px}
+.duo p{margin:0;overflow-wrap:anywhere;hyphens:auto;padding:10px;border-radius:12px;font-size:.88rem;line-height:1.35;background:var(--bg)}
+.duo>div>p:first-child{background:#e3f1ea}
+.duo>div>p:last-child{background:#fdf1dc}
+.duo-h b{padding:6px 10px;font-size:.95rem}
+@media (prefers-color-scheme:dark){.duo>div>p:first-child{background:#173a2e}.duo>div>p:last-child{background:#3a2e17}}

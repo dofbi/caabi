@@ -104,20 +104,14 @@
 <dialog id="dConseils" aria-labelledby="hConseils">
   <h2 id="hConseils">💡 Payer moins de frais avec PI-SPI</h2>
   <p class="aide">Des conseils, pas des obligations. Chiffres constatés par l'<a href="https://observatoire-pispi.netlify.app" rel="noopener">Observatoire des frais PI-SPI</a> (tests citoyens).</p>
-  <h3>🏪 Tu vends</h3>
-  <ul class="puces">
-    <li><b>Affiche ton QR PI-SPI</b> au comptoir et partage-le : tous tes clients peuvent te payer, qu'ils soient chez Wave, Orange Money ou dans une banque.</li>
-    <li><b>Demande à être payé par PI-SPI.</b> Recevoir coûte <b>0 F</b>, quel que soit le montant.</li>
-    <li><b>Paie tes fournisseurs depuis un compte qui affiche 0 F</b> à l'envoi. Constaté : Orange Money, app Ecobank, plusieurs banques. Depuis Wave : 0,94 % au-delà de 8 000 F par jour.</li>
-    <li><b>Retire le moins possible.</b> Le retrait chez un agent coûte souvent 1 %.</li>
-  </ul>
-  <h3>🛒 Tu achètes</h3>
-  <ul class="puces">
-    <li><b>Demande le QR PI-SPI du vendeur</b>, ou son adresse de paiement, et paie depuis ton app.</li>
-    <li><b>Moins de 8 000 F envoyés dans la journée : 0 F de frais</b>, depuis n'importe quelle app. C'est la règle BCEAO.</li>
-    <li>Au-delà, <b>pars d'une app qui affiche 0 F</b> si tu en as une.</li>
-    <li><b>Avant de valider, lis la ligne « Frais » et le nom du bénéficiaire.</b> Pas 0 F alors que tu l'attendais ? Annule. Garde le SMS.</li>
-  </ul>
+  <div class="duo" role="table" aria-label="Conseils pour vendre et pour acheter">
+    <div class="duo-h" role="row"><b role="columnheader">🏪 Vous vendez</b><b role="columnheader">🛒 Vous achetez</b></div>
+    <div role="row"><p role="cell"><b>Affichez votre QR PI-SPI</b> au comptoir et partagez-le.</p><p role="cell"><b>Demandez le QR PI-SPI</b> du vendeur et payez depuis votre app.</p></div>
+    <div role="row"><p role="cell"><b>Recevoir : 0&nbsp;F</b>, quel que soit le montant et l'app du client.</p><p role="cell"><b>0&nbsp;F jusqu'à 8&nbsp;000&nbsp;F</b> envoyés par jour, depuis n'importe quelle app.</p></div>
+    <div role="row"><p role="cell"><b>Payez vos fournisseurs</b> depuis un compte à 0&nbsp;F : Orange Money, Ecobank, banques.</p><p role="cell"><b>Au-delà de 8&nbsp;000&nbsp;F</b>, payez depuis une app à 0&nbsp;F. Wave : 0,94&nbsp;%.</p></div>
+    <div role="row"><p role="cell"><b>Retirez le moins possible</b> : souvent 1&nbsp;% chez l'agent.</p><p role="cell"><b>Payez directement</b> plutôt que de retirer du liquide.</p></div>
+    <div role="row"><p role="cell"><b>Vérifiez</b> le montant reçu et gardez le SMS.</p><p role="cell"><b>Lisez « Frais »</b> et le nom avant de valider. Pas 0&nbsp;F ? Annulez.</p></div>
+  </div>
   <p class="aide">Les tarifs peuvent changer à tout moment : ton écran de confirmation fait foi.</p>
   <div class="row"><button class="btn primary" data-close>Fermer</button></div>
 </dialog>
