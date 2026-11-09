@@ -1,6 +1,7 @@
 import { lire, construire, empreinte, CANAUX } from "./emv.js";
+import { T, LANG, appliquerHtml, changerLangue } from "./i18n.js";
 
-const VERSION = "0.3.4";
+const VERSION = "0.4.0";
 const KEY = "caabi.v1";
 const $ = id => document.getElementById(id);
 const PAYS = { SN: "Sénégal", CI: "Côte d'Ivoire", ML: "Mali", BF: "Burkina Faso", NE: "Niger", TG: "Togo", BJ: "Bénin", GW: "Guinée-Bissau" };
@@ -19,6 +20,7 @@ function toast(msg) {
 }
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
 const court = a => a ? a.slice(0, 8) + "…" + a.slice(-4) : "";
+const canal = k => (CANAUX[k] ? T(CANAUX[k]) : k);
 const fcfa = n => new Intl.NumberFormat("fr-FR").format(n) + " F";
 
 // Logo Caabi (la clé) au centre du QR. Correction d'erreur H : le QR reste lisible malgré le logo.
@@ -45,9 +47,9 @@ async function imageCle(c, payload, montant, affiche) {
   g.fillStyle = "#0b6b4f"; g.fillRect(0, 0, W, H);
   g.fillStyle = "#fff"; g.beginPath(); g.roundRect(40, 40, W - 80, H - 80, 48); g.fill();
   g.textAlign = "center"; g.fillStyle = "#14231d";
-  g.font = font(800, 64); g.fillText(c.nom.slice(0, 28), W / 2, 150);
+  g.font = font(800, 64); g.fillText(c.nom.slice(0, 28), W / 2, 150, W - 160);
   g.fillStyle = "#5b6b64"; g.font = font(500, 34);
-  g.fillText([c.app, PAYS[c.pays] || c.pays, "PI-SPI"].filter(Boolean).join(" · "), W / 2, 205);
+  g.fillText([c.app, PAYS[c.pays] || c.pays, "PI-SPI"].filter(Boolean).join(" · "), W / 2, 205, W - 160);
   const q = faireQr(payload), n = q.getModuleCount(), cote = 860, m = cote / (n + 8), x0 = (W - cote) / 2, y0 = 250;
   g.fillStyle = "#000";
   for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.isDark(r, k)) g.fillRect(Math.floor(x0 + (k + 4) * m), Math.floor(y0 + (r + 4) * m), Math.ceil(m), Math.ceil(m));
@@ -59,19 +61,19 @@ async function imageCle(c, payload, montant, affiche) {
   } catch {}
   let y = y0 + cote + 70;
   if (montant) { g.fillStyle = "#14231d"; g.font = font(800, 56); g.fillText(fcfa(montant), W / 2, y); y += 70; }
-  g.fillStyle = "#14231d"; g.font = font(600, 36); g.fillText(`Code de vérification ${empreinte(c)}`, W / 2, y); y += 70;
+  g.fillStyle = "#14231d"; g.font = font(600, 36); g.fillText(T("Code de vérification {code}", { code: empreinte(c) }), W / 2, y, W - 160); y += 70;
   g.fillStyle = "#5b6b64"; g.font = font(500, 30);
-  g.fillText("Scanne avec ton app (Wave, Orange Money, banque…)", W / 2, y); y += 42;
-  g.fillText("et vérifie le nom affiché avant de payer.", W / 2, y);
+  g.fillText(T("Scanne avec ton app (Wave, Orange Money, banque…)"), W / 2, y, W - 160); y += 42;
+  g.fillText(T("et vérifie le nom affiché avant de payer."), W / 2, y, W - 160);
   if (affiche) {
     // Message sur les frais : règle BCEAO (gratuit jusqu'à 8 000 F par jour, réception gratuite).
     y += 40; g.fillStyle = "#e3f1ea"; g.beginPath(); g.roundRect(90, y, W - 180, 270, 32); g.fill();
-    g.fillStyle = "#0b6b4f"; g.font = font(800, 50); g.fillText("Payez-moi par PI-SPI", W / 2, y + 70);
-    g.fillStyle = "#14231d"; g.font = font(500, 32); g.fillText("depuis Wave, Orange Money ou votre banque", W / 2, y + 120);
-    g.font = font(800, 40); g.fillText("0 F de frais jusqu'à 8 000 F par jour", W / 2, y + 180);
-    g.fillStyle = "#5b6b64"; g.font = font(500, 26); g.fillText("Règle BCEAO · vérifiez les frais sur votre écran avant de valider", W / 2, y + 230);
+    g.fillStyle = "#0b6b4f"; g.font = font(800, 50); g.fillText(T("Payez-moi par PI-SPI"), W / 2, y + 70, W - 220);
+    g.fillStyle = "#14231d"; g.font = font(500, 32); g.fillText(T("depuis Wave, Orange Money ou votre banque"), W / 2, y + 120, W - 220);
+    g.font = font(800, 40); g.fillText(T("0 F de frais jusqu'à 8 000 F par jour"), W / 2, y + 180, W - 220);
+    g.fillStyle = "#5b6b64"; g.font = font(500, 26); g.fillText(T("Règle BCEAO · vérifiez les frais sur votre écran avant de valider"), W / 2, y + 230, W - 220);
   }
-  g.font = font(600, 26); g.fillStyle = "#0b6b4f"; g.fillText("Fait avec Caabi · projet citoyen, sans lien avec la BCEAO", W / 2, H - 80);
+  g.font = font(600, 26); g.fillStyle = "#0b6b4f"; g.fillText(T("Fait avec Caabi · projet citoyen, sans lien avec la BCEAO"), W / 2, H - 80, W - 160);
   return new Promise(ok => cv.toBlob(ok, "image/png"));
 }
 
@@ -89,16 +91,16 @@ function rendre() {
     const li = el("li"), b = el("button", "item");
     b.append(el("span", "av", c.nom.trim().charAt(0).toUpperCase() || "?"));
     const txt = el("span", "txt");
-    txt.append(el("b", null, c.nom), el("small", null, [c.cat !== "moi" ? CAT[c.cat] : null, c.app, PAYS[c.pays] || c.pays].filter(Boolean).join(" · ")));
+    txt.append(el("b", null, c.nom), el("small", null, [c.cat !== "moi" ? T(CAT[c.cat]) : null, c.app, PAYS[c.pays] || c.pays].filter(Boolean).join(" · ")));
     b.append(txt, el("span", "emp", empreinte(c)));
     b.addEventListener("click", () => ouvrirCle(c.id));
     li.append(b); ul.append(li);
   }
   const vide = $("vide");
   vide.hidden = items.length > 0;
-  vide.textContent = q ? "Aucun résultat."
-    : onglet === "moi" ? "Aucune clé. Ouvre ton app (Wave, Orange Money, banque), affiche ton QR PI-SPI, fais une capture d'écran puis « Scanner un QR » → « Choisir une image »."
-    : "Ton carnet est vide. Scanne le QR PI-SPI d'un proche ou d'un marchand pour l'enregistrer.";
+  vide.textContent = q ? T("Aucun résultat.")
+    : onglet === "moi" ? T("Aucune clé. Ouvre ton app (Wave, Orange Money, banque), affiche ton QR PI-SPI, fais une capture d'écran puis « Scanner un QR » → « Choisir une image ».")
+    : T("Ton carnet est vide. Scanne le QR PI-SPI d'un proche ou d'un marchand pour l'enregistrer.");
 }
 
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
@@ -145,11 +147,11 @@ function stopCam() {
 
 $("btnScan").addEventListener("click", async () => {
   $("dScan").showModal();
-  $("scanEtat").textContent = "Ouverture de la caméra…";
+  $("scanEtat").textContent = T("Ouverture de la caméra…");
   try {
     flux = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
     const v = $("video"); v.srcObject = flux; await v.play();
-    $("scanEtat").textContent = "Vise le QR. Tu peux aussi choisir une capture d'écran.";
+    $("scanEtat").textContent = T("Vise le QR. Tu peux aussi choisir une capture d'écran.");
     let occupe = false;
     const tick = async () => {
       if (!flux) return;
@@ -163,7 +165,7 @@ $("btnScan").addEventListener("click", async () => {
     };
     tick();
   } catch {
-    $("scanEtat").textContent = "Caméra indisponible. Choisis plutôt une capture d'écran du QR.";
+    $("scanEtat").textContent = T("Caméra indisponible. Choisis plutôt une capture d'écran du QR.");
   }
 });
 $("dScan").addEventListener("close", stopCam);
@@ -174,9 +176,9 @@ $("fichier").addEventListener("change", async e => {
   try {
     const bmp = await createImageBitmap(f);
     const txt = await decoder(bmp, bmp.width, bmp.height);
-    if (!txt) { $("scanEtat").textContent = "Aucun QR trouvé dans cette image. Recadre la capture autour du QR et réessaie."; return; }
+    if (!txt) { $("scanEtat").textContent = T("Aucun QR trouvé dans cette image. Recadre la capture autour du QR et réessaie."); return; }
     stopCam(); $("dScan").close(); montrerResultat(txt);
-  } catch { $("scanEtat").textContent = "Image illisible."; }
+  } catch { $("scanEtat").textContent = T("Image illisible."); }
 });
 
 // ---------- Résultat ----------
@@ -187,25 +189,25 @@ function montrerResultat(payload, opts = {}) {
   const r = lire(payload);
   enCours = { r, genere: !!opts.genere };
   const box = $("resInfo"); box.replaceChildren();
-  for (const e of r.erreurs) box.append(el("p", "alerte bad", "✕ " + e));
+  for (const e of r.erreurs) box.append(el("p", "alerte bad", "✕ " + T(e)));
   if (!r.ok) {
-    box.append(el("p", "aide", "Les apps affichent parfois leur propre QR (Wave, Orange Money…) qui n'est pas un QR PI-SPI. Cherche dans ton app l'option « PI-SPI » ou « interopérable »."));
-    $("fSave").hidden = true; $("hRes").textContent = "QR non reconnu"; $("dRes").showModal(); return;
+    box.append(el("p", "aide", T("Les apps affichent parfois leur propre QR (Wave, Orange Money…) qui n'est pas un QR PI-SPI. Cherche dans ton app l'option « PI-SPI » ou « interopérable ».")));
+    $("fSave").hidden = true; $("hRes").textContent = T("QR non reconnu"); $("dRes").showModal(); return;
   }
-  $("hRes").textContent = opts.genere ? "QR fabriqué" : "QR PI-SPI valide ✓";
-  box.append(el("p", "alerte ok", opts.genere ? "✓ QR construit selon la norme BCEAO." : "✓ Somme de contrôle correcte, schéma PI-SPI reconnu."));
+  $("hRes").textContent = T(opts.genere ? "QR fabriqué" : "QR PI-SPI valide ✓");
+  box.append(el("p", "alerte ok", T(opts.genere ? "✓ QR construit selon la norme BCEAO." : "✓ Somme de contrôle correcte, schéma PI-SPI reconnu.")));
   const deja = etat.cles.filter(c => c.alias === r.alias);
-  for (const c of deja) box.append(el("p", "alerte mid", `Cette adresse est déjà enregistrée sous « ${c.nom} ».`));
-  for (const a of r.avertissements) box.append(el("p", "alerte mid", "! " + a));
+  for (const c of deja) box.append(el("p", "alerte mid", T("Cette adresse est déjà enregistrée sous « {nom} ».", { nom: c.nom })));
+  for (const a of r.avertissements) box.append(el("p", "alerte mid", "! " + T(a)));
   const dl = el("dl", "details");
-  ligne(dl, "Adresse", court(r.alias) + (r.aliasType === "SHID" ? " (SHID)" : ""));
-  ligne(dl, "Pays", PAYS[r.pays] || r.pays || "?");
-  ligne(dl, "Type", CANAUX[r.canal] || r.canal || "?");
-  if (r.montant) ligne(dl, "Montant", fcfa(r.montant));
-  if (r.reference) ligne(dl, "Référence", r.reference);
-  ligne(dl, "Vérification", empreinte(r));
+  ligne(dl, T("Adresse"), court(r.alias) + (r.aliasType === "SHID" ? " (SHID)" : ""));
+  ligne(dl, T("Pays"), PAYS[r.pays] || r.pays || "?");
+  ligne(dl, T("Type"), (r.canal && canal(r.canal)) || "?");
+  if (r.montant) ligne(dl, T("Montant"), fcfa(r.montant));
+  if (r.reference) ligne(dl, T("Référence"), r.reference);
+  ligne(dl, T("Vérification"), empreinte(r));
   box.append(dl);
-  box.append(el("p", "aide", "Le nom du titulaire n'est pas dans le QR : ton app l'affichera au moment de payer. Vérifie-le."));
+  box.append(el("p", "aide", T("Le nom du titulaire n'est pas dans le QR : ton app l'affichera au moment de payer. Vérifie-le.")));
   const f = $("fSave"); f.hidden = false; f.reset();
   f.cat.value = opts.genere ? "moi" : r.canal === "000" ? "marchand" : "proche";
   $("dRes").showModal();
@@ -221,7 +223,7 @@ $("fSave").addEventListener("submit", e => {
   etat.cles.push(c); sauver();
   onglet = c.cat === "moi" ? "moi" : "carnet";
   document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x.dataset.tab === onglet));
-  rendre(); toast("Enregistré : " + c.nom);
+  rendre(); toast(T("Enregistré : {nom}", { nom: c.nom }));
 });
 
 // ---------- Ajout manuel ----------
@@ -233,7 +235,7 @@ $("fAjout").addEventListener("submit", e => {
     const payload = construire({ alias: f.alias.value.trim(), pays: f.pays.value });
     montrerResultat(payload, { genere: true });
   } catch (err) {
-    e.preventDefault(); $("ajoutErr").textContent = err.message; $("ajoutErr").hidden = false;
+    e.preventDefault(); $("ajoutErr").textContent = T(err.message); $("ajoutErr").hidden = false;
   }
 });
 
@@ -244,23 +246,23 @@ function dessinerQr(c) {
   let payload = c.payload, aide;
   if (c.cat === "moi" && Number.isInteger(m) && m > 0) {
     payload = construire({ alias: c.alias, pays: c.pays || "SN", montant: m, canal: c.canal === "000" ? "000" : "731" });
-    aide = `QR avec montant (${fcfa(m)}) fabriqué par Caabi. La personne qui scanne peut encore vérifier avant de payer.`;
+    aide = T("QR avec montant ({m}) fabriqué par Caabi. La personne qui scanne peut encore vérifier avant de payer.", { m: fcfa(m) });
   } else {
     aide = c.cat === "moi"
-      ? "Montre ce QR à la personne qui te paie. Elle le scanne avec son app."
-      : "Pour payer : copie l'adresse et colle-la dans ton app, ou montre ce QR à un autre téléphone. Vérifie le nom affiché avant de valider.";
+      ? T("Montre ce QR à la personne qui te paie. Elle le scanne avec son app.")
+      : T("Pour payer : copie l'adresse et colle-la dans ton app, ou montre ce QR à un autre téléphone. Vérifie le nom affiché avant de valider.");
   }
   $("cleQr").innerHTML = qrSvg(payload, c.logo);
   $("btnLogoRetirer").hidden = !c.logo;
   qrAffiche = { payload, montant: c.cat === "moi" && Number.isInteger(m) && m > 0 ? m : null };
-  $("cleAide").textContent = aide + (c.genere ? " QR construit à partir de l'adresse saisie." : "");
+  $("cleAide").textContent = aide + (c.genere ? T(" QR construit à partir de l'adresse saisie.") : "");
 }
 
 async function ouvrirCle(id) {
   const c = etat.cles.find(x => x.id === id); if (!c) return;
   cleOuverte = c; c.vu = Date.now(); sauver();
   $("hCle").textContent = c.nom;
-  $("cleSous").textContent = [CAT[c.cat], c.app, PAYS[c.pays] || c.pays, CANAUX[c.canal]].filter(Boolean).join(" · ");
+  $("cleSous").textContent = [T(CAT[c.cat]), c.app, PAYS[c.pays] || c.pays, c.canal && canal(c.canal)].filter(Boolean).join(" · ");
   $("cleEmp").textContent = empreinte(c);
   $("cleMontant").value = "";
   $("cleMontant").closest(".montant-box").hidden = c.cat !== "moi";
@@ -274,8 +276,8 @@ $("cleMontant").addEventListener("input", () => cleOuverte && dessinerQr(cleOuve
 $("dCle").addEventListener("close", () => { verrou?.release?.(); verrou = null; rendre(); });
 
 $("btnCopier").addEventListener("click", async () => {
-  try { await navigator.clipboard.writeText(cleOuverte.alias); toast("Adresse copiée. Colle-la dans ton app."); }
-  catch { prompt("Copie l'adresse :", cleOuverte.alias); }
+  try { await navigator.clipboard.writeText(cleOuverte.alias); toast(T("Adresse copiée. Colle-la dans ton app.")); }
+  catch { prompt(T("Copie l'adresse :"), cleOuverte.alias); }
 });
 $("btnImage").addEventListener("click", async () => {
   const c = cleOuverte; if (!c || !qrAffiche) return;
@@ -286,7 +288,7 @@ $("btnImage").addEventListener("click", async () => {
     try { await navigator.share({ files: [f], title: c.nom }); return; } catch (e) { if (e.name === "AbortError") return; }
   }
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = nomF; a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Image enregistrée");
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast(T("Image enregistrée"));
 });
 $("cleAffiche").addEventListener("change", e => { if (cleOuverte) { cleOuverte.affiche = e.target.checked; sauver(); } });
 $("fLogo").addEventListener("change", async e => {
@@ -298,28 +300,35 @@ $("fLogo").addEventListener("change", async e => {
     g.drawImage(bmp, (T - bmp.width * k) / 2, (T - bmp.height * k) / 2, bmp.width * k, bmp.height * k);
     let url = cv.toDataURL("image/png");
     if (url.length >= 200000) url = cv.toDataURL("image/jpeg", 0.85);
-    cleOuverte.logo = url; sauver(); dessinerQr(cleOuverte); toast("Logo ajouté. Vérifie que le QR se scanne bien.");
-  } catch { toast("Image illisible"); }
+    cleOuverte.logo = url; sauver(); dessinerQr(cleOuverte); toast(T("Logo ajouté. Vérifie que le QR se scanne bien."));
+  } catch { toast(T("Image illisible")); }
 });
-$("btnLogoRetirer").addEventListener("click", () => { if (!cleOuverte) return; delete cleOuverte.logo; sauver(); dessinerQr(cleOuverte); toast("Logo Caabi remis"); });
+$("btnLogoRetirer").addEventListener("click", () => { if (!cleOuverte) return; delete cleOuverte.logo; sauver(); dessinerQr(cleOuverte); toast(T("Logo Caabi remis")); });
 $("btnConseils").addEventListener("click", () => $("dConseils").showModal());
 $("btnRenommer").addEventListener("click", () => {
-  const n = prompt("Nouveau nom :", cleOuverte.nom);
+  const n = prompt(T("Nouveau nom :"), cleOuverte.nom);
   if (n && n.trim()) { cleOuverte.nom = n.trim().slice(0, 40); sauver(); $("hCle").textContent = cleOuverte.nom; }
 });
 $("btnSuppr").addEventListener("click", () => {
-  if (!confirm(`Supprimer « ${cleOuverte.nom} » ?`)) return;
-  etat.cles = etat.cles.filter(c => c.id !== cleOuverte.id); sauver(); $("dCle").close(); toast("Supprimé");
+  if (!confirm(T("Supprimer « {nom} » ?", { nom: cleOuverte.nom }))) return;
+  etat.cles = etat.cles.filter(c => c.id !== cleOuverte.id); sauver(); $("dCle").close(); toast(T("Supprimé"));
 });
 
 // ---------- Réglages ----------
 $("btnMenu").addEventListener("click", () => $("dMenu").showModal());
-$("version").textContent = VERSION;
+// Langue : le choix est gardé sur le téléphone. Le français reste la langue de référence.
+function majLangue() {
+  appliquerHtml();
+  $("version").textContent = VERSION;
+  document.querySelectorAll("#choixLangue [data-lang]").forEach(b => b.classList.toggle("primary", b.dataset.lang === LANG));
+  rendre();
+}
+document.querySelectorAll("#choixLangue [data-lang]").forEach(b => b.addEventListener("click", () => { changerLangue(b.dataset.lang); majLangue(); }));
 $("btnExport").addEventListener("click", () => {
   const blob = new Blob([JSON.stringify({ app: "caabi", version: 1, exporte: new Date().toISOString(), cles: etat.cles }, null, 1)], { type: "application/json" });
   const a = el("a"); a.href = URL.createObjectURL(blob); a.download = "caabi-sauvegarde.json"; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  toast("Fichier enregistré. Garde-le en lieu sûr.");
+  toast(T("Fichier enregistré. Garde-le en lieu sûr."));
 });
 $("fImport").addEventListener("change", async e => {
   const f = e.target.files[0]; e.target.value = ""; if (!f) return;
@@ -331,20 +340,20 @@ $("fImport").addEventListener("change", async e => {
       etat.cles.push({ id: uid(), nom: String(c.nom || "Sans nom").slice(0, 40), cat: CAT[c.cat] ? c.cat : "proche", app: String(c.app || "").slice(0, 30), payload: c.payload, alias: lire(c.payload).alias, pays: lire(c.payload).pays, canal: lire(c.payload).canal, genere: !!c.genere, ajoute: c.ajoute || Date.now(), ...(logoOk(c.logo) ? { logo: c.logo } : {}), ...(c.affiche ? { affiche: true } : {}) });
       n++;
     }
-    sauver(); rendre(); toast(n + " clé(s) importée(s)");
-  } catch { toast("Fichier invalide"); }
+    sauver(); rendre(); toast(T("{n} clé(s) importée(s)", { n }));
+  } catch { toast(T("Fichier invalide")); }
 });
 $("btnExemple").addEventListener("click", () => {
   $("dMenu").close();
   montrerResultat(construire({ alias: "341c3e1b-4312-49ec-b75e-4c8c74c10fd7", pays: "SN" }), { genere: true });
-  $("fSave").nom.value = "Exemple BCEAO (faux compte)";
+  $("fSave").nom.value = T("Exemple BCEAO (faux compte)");
 });
 $("btnTout").addEventListener("click", () => {
-  if (!confirm("Effacer toutes les clés de ce téléphone ? C'est définitif.")) return;
-  etat = { cles: [] }; sauver(); rendre(); $("dMenu").close(); toast("Tout est effacé");
+  if (!confirm(T("Effacer toutes les clés de ce téléphone ? C'est définitif."))) return;
+  etat = { cles: [] }; sauver(); rendre(); $("dMenu").close(); toast(T("Tout est effacé"));
 });
 
 // ---------- Hors ligne ----------
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 
-rendre();
+majLangue();

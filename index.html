@@ -13,34 +13,34 @@
 </head>
 <body>
 <header>
-  <div class="brand"><img src="icon.svg" alt="" width="34" height="34"><div><h1>Caabi</h1><p>Ton trousseau PI-SPI · rien ne quitte ton téléphone</p></div></div>
-  <div class="hbtns"><button class="icon-btn" id="btnConseils" aria-label="Conseils pour payer moins de frais">💡</button><button class="icon-btn" id="btnMenu" aria-label="Réglages et informations">⋯</button></div>
+  <div class="brand"><img src="icon.svg" alt="" width="34" height="34"><div><h1>Caabi</h1><p data-i18n="sousTitre">Ton trousseau PI-SPI · rien ne quitte ton téléphone</p></div></div>
+  <div class="hbtns"><button class="icon-btn" id="btnConseils" data-i18n-aria="ariaConseils" aria-label="Conseils pour payer moins de frais">💡</button><button class="icon-btn" id="btnMenu" data-i18n-aria="ariaMenu" aria-label="Réglages et informations">⋯</button></div>
 </header>
 
 <nav class="tabs" role="tablist">
-  <button role="tab" id="tabMoi" aria-selected="true" data-tab="moi">Mes clés</button>
-  <button role="tab" id="tabCarnet" aria-selected="false" data-tab="carnet">Carnet</button>
+  <button role="tab" id="tabMoi" aria-selected="true" data-tab="moi" data-i18n="tabMoi">Mes clés</button>
+  <button role="tab" id="tabCarnet" aria-selected="false" data-tab="carnet" data-i18n="tabCarnet">Carnet</button>
 </nav>
 
 <main>
-  <input type="search" id="recherche" placeholder="Chercher un nom…" aria-label="Chercher dans le carnet" hidden>
+  <input type="search" id="recherche" data-i18n-ph="phRecherche" data-i18n-aria="ariaRecherche" placeholder="Chercher un nom…" aria-label="Chercher dans le carnet" hidden>
   <ul class="liste" id="liste"></ul>
   <div class="vide" id="vide"></div>
 </main>
 
 <div class="actions">
-  <button class="btn primary big" id="btnScan">📷 Scanner un QR</button>
-  <button class="btn big" id="btnAjout">＋ Ajouter</button>
+  <button class="btn primary big" id="btnScan" data-i18n="btnScan">📷 Scanner un QR</button>
+  <button class="btn big" id="btnAjout" data-i18n="btnAjout">＋ Ajouter</button>
 </div>
 
 <!-- Scanner -->
 <dialog id="dScan" aria-labelledby="hScan">
-  <h2 id="hScan">Scanner un QR PI-SPI</h2>
+  <h2 id="hScan" data-i18n="hScan">Scanner un QR PI-SPI</h2>
   <div class="cam"><video id="video" playsinline muted></video><div class="viseur" aria-hidden="true"></div></div>
-  <p class="aide" id="scanEtat">Vise le QR. Tu peux aussi choisir une capture d'écran.</p>
+  <p class="aide" id="scanEtat" data-i18n="scanAide">Vise le QR. Tu peux aussi choisir une capture d'écran.</p>
   <div class="row">
-    <label class="btn">🖼️ Choisir une image<input type="file" accept="image/*" id="fichier" hidden></label>
-    <button class="btn" data-close>Annuler</button>
+    <label class="btn"><span data-i18n="choisirImage">🖼️ Choisir une image</span><input type="file" accept="image/*" id="fichier" hidden></label>
+    <button class="btn" data-close data-i18n="annuler">Annuler</button>
   </div>
 </dialog>
 
@@ -49,97 +49,99 @@
   <h2 id="hRes">QR lu</h2>
   <div id="resInfo"></div>
   <form id="fSave" method="dialog">
-    <label>Nom <input name="nom" required maxlength="40" placeholder="ex. Tata Awa, Boutique Modou, Mon Wave"></label>
-    <fieldset class="cats"><legend>C'est…</legend>
-      <label><input type="radio" name="cat" value="moi"> à moi</label>
-      <label><input type="radio" name="cat" value="proche" checked> un proche</label>
-      <label><input type="radio" name="cat" value="marchand"> un marchand</label>
+    <label><span data-i18n="nom">Nom</span> <input name="nom" required maxlength="40" data-i18n-ph="phNom" placeholder="ex. Tata Awa, Boutique Modou, Mon Wave"></label>
+    <fieldset class="cats"><legend data-i18n="cestA">C'est…</legend>
+      <label><input type="radio" name="cat" value="moi"> <span data-i18n="catMoi">à moi</span></label>
+      <label><input type="radio" name="cat" value="proche" checked> <span data-i18n="catProche">un proche</span></label>
+      <label><input type="radio" name="cat" value="marchand"> <span data-i18n="catMarchand">un marchand</span></label>
     </fieldset>
-    <label>Compte / app <input name="app" maxlength="30" placeholder="ex. Wave, Orange Money, Ecobank (facultatif)"></label>
-    <div class="row"><button class="btn primary" id="btnSave" value="save">Enregistrer</button><button class="btn" value="cancel" formnovalidate>Annuler</button></div>
+    <label><span data-i18n="compteApp">Compte / app</span> <input name="app" maxlength="30" data-i18n-ph="phApp" placeholder="ex. Wave, Orange Money, Ecobank (facultatif)"></label>
+    <div class="row"><button class="btn primary" id="btnSave" value="save" data-i18n="enregistrer">Enregistrer</button><button class="btn" value="cancel" formnovalidate data-i18n="annuler">Annuler</button></div>
   </form>
 </dialog>
 
 <!-- Ajout manuel -->
 <dialog id="dAjout" aria-labelledby="hAjout">
-  <h2 id="hAjout">Ajouter avec une adresse de paiement</h2>
-  <p class="aide">Ton app (Wave, Orange Money, banque…) peut afficher ton <b>adresse de paiement PI-SPI</b> : 36 caractères comme <code>341c3e1b-4312-49ec-b75e-4c8c74c10fd7</code>. Colle-la ici, Caabi fabrique le QR selon la norme BCEAO.</p>
+  <h2 id="hAjout" data-i18n="hAjout">Ajouter avec une adresse de paiement</h2>
+  <p class="aide" data-i18n="ajoutAide">Ton app (Wave, Orange Money, banque…) peut afficher ton <b>adresse de paiement PI-SPI</b> : 36 caractères comme <code>341c3e1b-4312-49ec-b75e-4c8c74c10fd7</code>. Colle-la ici, Caabi fabrique le QR selon la norme BCEAO.</p>
   <form id="fAjout" method="dialog">
-    <label>Adresse de paiement (SHID) <input name="alias" required autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></label>
-    <label>Pays du compte <select name="pays">
+    <label><span data-i18n="adresseShid">Adresse de paiement (SHID)</span> <input name="alias" required autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></label>
+    <label><span data-i18n="paysCompte">Pays du compte</span> <select name="pays">
       <option value="SN">Sénégal</option><option value="CI">Côte d'Ivoire</option><option value="ML">Mali</option><option value="BF">Burkina Faso</option>
       <option value="NE">Niger</option><option value="TG">Togo</option><option value="BJ">Bénin</option><option value="GW">Guinée-Bissau</option></select></label>
     <p class="erreur" id="ajoutErr" hidden></p>
-    <div class="row"><button class="btn primary" value="ok">Continuer</button><button class="btn" value="cancel" formnovalidate>Annuler</button></div>
+    <div class="row"><button class="btn primary" value="ok" data-i18n="continuer">Continuer</button><button class="btn" value="cancel" formnovalidate data-i18n="annuler">Annuler</button></div>
   </form>
 </dialog>
 
 <!-- Affichage d'une clé -->
 <dialog id="dCle" class="plein" aria-labelledby="hCle">
-  <div class="cle-tete"><h2 id="hCle"></h2><button class="icon-btn" data-close aria-label="Fermer">✕</button></div>
+  <div class="cle-tete"><h2 id="hCle"></h2><button class="icon-btn" data-close data-i18n-aria="ariaFermer" aria-label="Fermer">✕</button></div>
   <p class="cle-sous" id="cleSous"></p>
   <div class="qr" id="cleQr"></div>
-  <p class="empreinte">Code de vérification <b id="cleEmp"></b></p>
+  <p class="empreinte"><span data-i18n="codeVerif">Code de vérification</span> <b id="cleEmp"></b></p>
   <div class="montant-box">
-    <label>Montant demandé (facultatif) <input id="cleMontant" type="number" inputmode="numeric" min="1" step="1" placeholder="F CFA"></label>
+    <label><span data-i18n="montantDemande">Montant demandé (facultatif)</span> <input id="cleMontant" type="number" inputmode="numeric" min="1" step="1" placeholder="F CFA"></label>
   </div>
   <div class="perso" id="clePerso">
     <div class="row wrap">
-      <label class="btn">🏪 Mon logo<input type="file" accept="image/*" id="fLogo" hidden></label>
-      <button class="btn" id="btnLogoRetirer" hidden>Remettre le logo Caabi</button>
+      <label class="btn"><span data-i18n="monLogo">🏪 Mon logo</span><input type="file" accept="image/*" id="fLogo" hidden></label>
+      <button class="btn" id="btnLogoRetirer" hidden data-i18n="logoRetirer">Remettre le logo Caabi</button>
     </div>
-    <label class="check"><input type="checkbox" id="cleAffiche"> Affiche boutique : ajouter « Payez-moi par PI-SPI, 0 F jusqu'à 8 000 F » sur l'image</label>
-    <p class="aide">Mets le logo de ta boutique, pas celui d'un opérateur ni de la BCEAO. Il reste sur ton téléphone.</p>
+    <label class="check"><input type="checkbox" id="cleAffiche"> <span data-i18n="affiche">Affiche boutique : ajouter « Payez-moi par PI-SPI, 0 F jusqu'à 8 000 F » sur l'image</span></label>
+    <p class="aide" data-i18n="logoAide">Mets le logo de ta boutique, pas celui d'un opérateur ni de la BCEAO. Il reste sur ton téléphone.</p>
   </div>
   <p class="aide" id="cleAide"></p>
   <div class="row wrap">
-    <button class="btn primary" id="btnImage">📤 Partager l'image</button>
-    <button class="btn" id="btnCopier">📋 Copier l'adresse</button>
-    <button class="btn" id="btnRenommer">✏️ Renommer</button>
-    <button class="btn danger" id="btnSuppr">🗑️ Supprimer</button>
+    <button class="btn primary" id="btnImage" data-i18n="partager">📤 Partager l'image</button>
+    <button class="btn" id="btnCopier" data-i18n="copier">📋 Copier l'adresse</button>
+    <button class="btn" id="btnRenommer" data-i18n="renommer">✏️ Renommer</button>
+    <button class="btn danger" id="btnSuppr" data-i18n="supprimer">🗑️ Supprimer</button>
   </div>
 </dialog>
 
 <!-- Conseils -->
 <dialog id="dConseils" aria-labelledby="hConseils">
-  <h2 id="hConseils">💡 Payer moins de frais avec PI-SPI</h2>
-  <p class="aide">Des conseils, pas des obligations. Chiffres constatés par l'<a href="https://observatoire-pispi.netlify.app" rel="noopener">Observatoire des frais PI-SPI</a> (tests citoyens).</p>
-  <div class="duo" role="table" aria-label="Conseils pour vendre et pour acheter">
-    <div role="row" class="duo-star"><p role="cell">⭐ <b>Privilégiez les réseaux qui pratiquent la gratuité.</b> 0&nbsp;F constaté à l'envoi : <b>Orange Money, app Ecobank, plusieurs banques</b>. Plus vendeurs et clients s'y retrouvent, moins tout le monde paie.</p></div>
-    <div class="duo-h" role="row"><b role="columnheader">🏪 Vous vendez</b><b role="columnheader">🛒 Vous achetez</b></div>
-    <div role="row"><p role="cell"><b>Affichez votre QR PI-SPI</b> au comptoir et partagez-le.</p><p role="cell"><b>Demandez le QR PI-SPI</b> du vendeur et payez depuis votre app.</p></div>
-    <div role="row"><p role="cell"><b>Recevoir entre particuliers : 0&nbsp;F</b> (BCEAO). Compte <b>marchand</b> : pas de règle publiée, commission possible. Demandez à votre opérateur.</p><p role="cell"><b>0&nbsp;F jusqu'à 8&nbsp;000&nbsp;F</b> envoyés par jour, depuis n'importe quelle app.</p></div>
-    <div role="row"><p role="cell"><b>Payez vos fournisseurs</b> depuis un compte à 0&nbsp;F : Orange Money, Ecobank, banques.</p><p role="cell"><b>Au-delà de 8&nbsp;000&nbsp;F</b>, payez depuis un réseau gratuit : Orange Money, Ecobank, banque. Wave : 0,94&nbsp;%.</p></div>
-    <div role="row"><p role="cell"><b>Retirez le moins possible</b> : souvent 1&nbsp;% chez l'agent.</p><p role="cell"><b>Payez directement</b> plutôt que de retirer du liquide.</p></div>
-    <div role="row"><p role="cell"><b>Vérifiez</b> le montant reçu et gardez le SMS.</p><p role="cell"><b>Lisez « Frais »</b> et le nom avant de valider. Pas 0&nbsp;F ? Annulez.</p></div>
+  <h2 id="hConseils" data-i18n="hConseils">💡 Payer moins de frais avec PI-SPI</h2>
+  <p class="aide" data-i18n="conseilsIntro">Des conseils, pas des obligations. Chiffres constatés par l'<a href="https://observatoire-pispi.netlify.app" rel="noopener">Observatoire des frais PI-SPI</a> (tests citoyens).</p>
+  <div class="duo" role="table" data-i18n-aria="ariaDuo" aria-label="Conseils pour vendre et pour acheter">
+    <div role="row" class="duo-star"><p role="cell" data-i18n="star">⭐ <b>Privilégiez les réseaux qui pratiquent la gratuité.</b> 0&nbsp;F constaté à l'envoi : <b>Orange Money, app Ecobank, plusieurs banques</b>. Plus vendeurs et clients s'y retrouvent, moins tout le monde paie.</p></div>
+    <div class="duo-h" role="row"><b role="columnheader" data-i18n="hVendez">🏪 Vous vendez</b><b role="columnheader" data-i18n="hAchetez">🛒 Vous achetez</b></div>
+    <div role="row"><p role="cell" data-i18n="v1"><b>Affichez votre QR PI-SPI</b> au comptoir et partagez-le.</p><p role="cell" data-i18n="a1"><b>Demandez le QR PI-SPI</b> du vendeur et payez depuis votre app.</p></div>
+    <div role="row"><p role="cell" data-i18n="v2"><b>Recevoir entre particuliers : 0&nbsp;F</b> (BCEAO). Compte <b>marchand</b> : pas de règle publiée, commission possible. Demandez à votre opérateur.</p><p role="cell" data-i18n="a2"><b>0&nbsp;F jusqu'à 8&nbsp;000&nbsp;F</b> envoyés par jour, depuis n'importe quelle app.</p></div>
+    <div role="row"><p role="cell" data-i18n="v3"><b>Payez vos fournisseurs</b> depuis un compte à 0&nbsp;F : Orange Money, Ecobank, banques.</p><p role="cell" data-i18n="a3"><b>Au-delà de 8&nbsp;000&nbsp;F</b>, payez depuis un réseau gratuit : Orange Money, Ecobank, banque. Wave : 0,94&nbsp;%.</p></div>
+    <div role="row"><p role="cell" data-i18n="v4"><b>Retirez le moins possible</b> : souvent 1&nbsp;% chez l'agent.</p><p role="cell" data-i18n="a4"><b>Payez directement</b> plutôt que de retirer du liquide.</p></div>
+    <div role="row"><p role="cell" data-i18n="v5"><b>Vérifiez</b> le montant reçu et gardez le SMS.</p><p role="cell" data-i18n="a5"><b>Lisez « Frais »</b> et le nom avant de valider. Pas 0&nbsp;F ? Annulez.</p></div>
   </div>
-  <p class="aide">Les tarifs peuvent changer à tout moment : ton écran de confirmation fait foi.</p>
-  <div class="row"><button class="btn primary" data-close>Fermer</button></div>
+  <p class="aide" data-i18n="conseilsFin">Les tarifs peuvent changer à tout moment : ton écran de confirmation fait foi.</p>
+  <div class="row"><button class="btn primary" data-close data-i18n="fermer">Fermer</button></div>
 </dialog>
 
 <!-- Réglages -->
 <dialog id="dMenu" aria-labelledby="hMenu">
   <h2 id="hMenu">Caabi</h2>
-  <p>Caabi (« clé » en wolof) range tes QR PI-SPI et ceux des gens que tu paies souvent.</p>
+  <p data-i18n="menuIntro">Caabi (« clé » en wolof) range tes QR PI-SPI et ceux des gens que tu paies souvent.</p>
   <ul class="puces">
-    <li><b>Rien n'est envoyé</b> : pas de compte, pas de serveur, pas de statistiques. Tes clés restent dans ce navigateur.</li>
-    <li><b>Caabi ne paie pas</b> : il montre ou lit un QR. Le paiement se fait toujours dans ton app (Wave, Orange Money, banque…).</li>
-    <li><b>Avant de payer</b>, vérifie toujours le nom du bénéficiaire affiché par ton app.</li>
-    <li>Projet citoyen, sans lien avec la BCEAO ni avec les opérateurs.</li>
+    <li data-i18n="menuP1"><b>Rien n'est envoyé</b> : pas de compte, pas de serveur, pas de statistiques. Tes clés restent dans ce navigateur.</li>
+    <li data-i18n="menuP2"><b>Caabi ne paie pas</b> : il montre ou lit un QR. Le paiement se fait toujours dans ton app (Wave, Orange Money, banque…).</li>
+    <li data-i18n="menuP3"><b>Avant de payer</b>, vérifie toujours le nom du bénéficiaire affiché par ton app.</li>
+    <li data-i18n="menuP4">Projet citoyen, sans lien avec la BCEAO ni avec les opérateurs.</li>
   </ul>
-  <h3>Sauvegarde</h3>
-  <p class="aide">Si tu changes de téléphone ou vides le navigateur, tes clés disparaissent. Garde une copie.</p>
+  <h3 data-i18n="langue">Langue</h3>
+  <div class="row wrap" id="choixLangue"><button class="btn" data-lang="fr" lang="fr">Français</button><button class="btn" data-lang="wo" lang="wo">Wolof</button></div>
+  <h3 data-i18n="hSauvegarde">Sauvegarde</h3>
+  <p class="aide" data-i18n="sauvegardeAide">Si tu changes de téléphone ou vides le navigateur, tes clés disparaissent. Garde une copie.</p>
   <div class="row wrap">
-    <button class="btn" id="btnExport">⬇️ Exporter mes clés</button>
-    <label class="btn">⬆️ Importer<input type="file" accept="application/json,.json" id="fImport" hidden></label>
+    <button class="btn" id="btnExport" data-i18n="exporter">⬇️ Exporter mes clés</button>
+    <label class="btn"><span data-i18n="importer">⬆️ Importer</span><input type="file" accept="application/json,.json" id="fImport" hidden></label>
   </div>
-  <h3>Tester</h3>
+  <h3 data-i18n="hTester">Tester</h3>
   <div class="row wrap">
-    <button class="btn" id="btnExemple">Afficher un QR d'exemple</button>
-    <button class="btn danger" id="btnTout">Tout effacer</button>
+    <button class="btn" id="btnExemple" data-i18n="exemple">Afficher un QR d'exemple</button>
+    <button class="btn danger" id="btnTout" data-i18n="toutEffacer">Tout effacer</button>
   </div>
-  <p class="aide">Code source ouvert : <a href="https://github.com/dofbi/caabi" id="lienCode" rel="noopener">github.com/dofbi/caabi</a> · version <span id="version"></span></p>
-  <div class="row"><button class="btn primary" data-close>Fermer</button></div>
+  <p class="aide" data-i18n="codeSource">Code source ouvert : <a href="https://github.com/dofbi/caabi" id="lienCode" rel="noopener">github.com/dofbi/caabi</a> · version <span id="version"></span></p>
+  <div class="row"><button class="btn primary" data-close data-i18n="fermer">Fermer</button></div>
 </dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

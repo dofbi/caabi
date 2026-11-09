@@ -8,6 +8,7 @@ Caabi (« clé » en wolof) est une petite application web (PWA) pour ranger ses
 - **Logo de ta boutique** : remplace le logo Caabi au centre de ton QR par le tien (image réduite à 192 px, gardée sur le téléphone).
 - **Affiche boutique** : ajoute à l'image « Payez-moi par PI-SPI, 0 F de frais jusqu'à 8 000 F par jour » (règle BCEAO), à imprimer ou partager.
 - **Conseils 💡** : ce qu'il faut faire pour payer moins de frais quand on vend ou quand on achète, d'après l'[Observatoire des frais PI-SPI](https://observatoire-pispi.netlify.app).
+- **Wolof** : toute l'app existe en wolof (orthographe officielle, mot français entre parenthèses pour les termes techniques). Choix de la langue dans le menu ⋯, gardé sur le téléphone.
 - **Vérification** : chaque QR est contrôlé (identifiant de schéma `int.bceao.pi` et somme de contrôle CRC16) avant d'être enregistré.
 
 ## Ce que Caabi ne fait pas
@@ -46,6 +47,7 @@ La caméra ne fonctionne qu'en HTTPS ou sur `localhost`.
 ## Fichiers
 
 - `index.html`, `style.css`, `app.js` : l'interface.
+- `i18n.js` : traductions wolof. Le français reste dans `index.html` et `app.js` ; les chaînes wolof sont indexées par le texte français (repli sur le français si une traduction manque).
 - `emv.js` : lecture, vérification et construction des QR PI-SPI.
 - `sw.js` : mise en cache pour l'usage hors ligne.
 - `vendor/qrcode.js` : [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) 1.4.4 (MIT).
