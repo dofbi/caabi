@@ -1,7 +1,7 @@
 import { lire, construire, empreinte, CANAUX } from "./emv.js";
 import { T, LANG, appliquerHtml, changerLangue } from "./i18n.js";
 
-const VERSION = "0.4.0";
+const VERSION = "0.5.0";
 const KEY = "caabi.v1";
 const $ = id => document.getElementById(id);
 const PAYS = { SN: "Sénégal", CI: "Côte d'Ivoire", ML: "Mali", BF: "Burkina Faso", NE: "Niger", TG: "Togo", BJ: "Bénin", GW: "Guinée-Bissau" };
@@ -41,24 +41,41 @@ function qrSvg(payload, logo) {
 
 // Image à partager : nom, QR avec logo, code de vérification, montant. Fabriquée sur le téléphone, rien n'est envoyé.
 function chargerImage(src) { return new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = src; }); }
+const police = (w, px) => `${w} ${px}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+// Dessine un QR (avec sa marge blanche et le logo au centre) dans un carré de côté « cote ».
+async function dessinerQrCanvas(g, payload, x0, y0, cote, logo) {
+  const q = faireQr(payload), n = q.getModuleCount(), m = cote / (n + 8);
+  g.fillStyle = "#fff"; g.fillRect(x0, y0, cote, cote);
+  g.fillStyle = "#000";
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.isDark(r, k)) g.fillRect(Math.floor(x0 + (k + 4) * m), Math.floor(y0 + (r + 4) * m), Math.ceil(m), Math.ceil(m));
+  const l = cote * 0.2, lx = x0 + cote / 2 - l / 2, ly = y0 + cote / 2 - l / 2;
+  g.fillStyle = "#fff"; g.beginPath(); g.roundRect(lx - m, ly - m, l + 2 * m, l + 2 * m, 2 * m); g.fill();
+  try {
+    const im = await chargerImage(logoOk(logo) ? logo : "icon-512.png"), k = Math.min(l / im.width, l / im.height);
+    g.drawImage(im, lx + (l - im.width * k) / 2, ly + (l - im.height * k) / 2, im.width * k, im.height * k);
+  } catch {}
+}
+// Partage une image PNG (WhatsApp, etc.) ; sinon la télécharge. Rien ne passe par un serveur.
+const nomFichier = s => "caabi-" + (s.normalize("NFD").replace(/[^\w]+/g, "-").replace(/^-|-$/g, "").toLowerCase() || "carte") + ".png";
+async function partagerPng(blob, nomF, titre) {
+  const f = new File([blob], nomF, { type: "image/png" });
+  if (navigator.canShare?.({ files: [f] })) {
+    try { await navigator.share({ files: [f], title: titre }); return; } catch (e) { if (e.name === "AbortError") return; }
+  }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = nomF; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast(T("Image enregistrée"));
+}
 async function imageCle(c, payload, montant, affiche) {
   const W = 1080, H = affiche ? 1840 : 1500, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
-  const g = cv.getContext("2d"), font = (w, px) => `${w} ${px}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+  const g = cv.getContext("2d"), font = police;
   g.fillStyle = "#0b6b4f"; g.fillRect(0, 0, W, H);
   g.fillStyle = "#fff"; g.beginPath(); g.roundRect(40, 40, W - 80, H - 80, 48); g.fill();
   g.textAlign = "center"; g.fillStyle = "#14231d";
   g.font = font(800, 64); g.fillText(c.nom.slice(0, 28), W / 2, 150, W - 160);
   g.fillStyle = "#5b6b64"; g.font = font(500, 34);
   g.fillText([c.app, PAYS[c.pays] || c.pays, "PI-SPI"].filter(Boolean).join(" · "), W / 2, 205, W - 160);
-  const q = faireQr(payload), n = q.getModuleCount(), cote = 860, m = cote / (n + 8), x0 = (W - cote) / 2, y0 = 250;
-  g.fillStyle = "#000";
-  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.isDark(r, k)) g.fillRect(Math.floor(x0 + (k + 4) * m), Math.floor(y0 + (r + 4) * m), Math.ceil(m), Math.ceil(m));
-  const l = cote * 0.2, lx = W / 2 - l / 2, ly = y0 + cote / 2 - l / 2;
-  g.fillStyle = "#fff"; g.beginPath(); g.roundRect(lx - m, ly - m, l + 2 * m, l + 2 * m, 2 * m); g.fill();
-  try {
-    const im = await chargerImage(logoOk(c.logo) ? c.logo : "icon-512.png"), k = Math.min(l / im.width, l / im.height);
-    g.drawImage(im, lx + (l - im.width * k) / 2, ly + (l - im.height * k) / 2, im.width * k, im.height * k);
-  } catch {}
+  const cote = 860, y0 = 250;
+  await dessinerQrCanvas(g, payload, (W - cote) / 2, y0, cote, c.logo);
   let y = y0 + cote + 70;
   if (montant) { g.fillStyle = "#14231d"; g.font = font(800, 56); g.fillText(fcfa(montant), W / 2, y); y += 70; }
   g.fillStyle = "#14231d"; g.font = font(600, 36); g.fillText(T("Code de vérification {code}", { code: empreinte(c) }), W / 2, y, W - 160); y += 70;
@@ -74,6 +91,36 @@ async function imageCle(c, payload, montant, affiche) {
     g.fillStyle = "#5b6b64"; g.font = font(500, 26); g.fillText(T("Règle BCEAO · vérifiez les frais sur votre écran avant de valider"), W / 2, y + 230, W - 220);
   }
   g.font = font(600, 26); g.fillStyle = "#0b6b4f"; g.fillText(T("Fait avec Caabi · projet citoyen, sans lien avec la BCEAO"), W / 2, H - 80, W - 160);
+  return new Promise(ok => cv.toBlob(ok, "image/png"));
+}
+
+// Carte : plusieurs de mes clés sur une seule image (comme un lien de profil, mais fabriquée sur le téléphone).
+async function imageCarte(nom, cles) {
+  const W = 1080, n = cles.length, cols = n === 1 ? 1 : 2, rows = Math.ceil(n / cols);
+  const cote = cols === 1 ? 760 : 430, cellH = cote + 150, haut = 250, H = haut + rows * cellH + 190;
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const g = cv.getContext("2d");
+  g.fillStyle = "#0b6b4f"; g.fillRect(0, 0, W, H);
+  g.fillStyle = "#fff"; g.beginPath(); g.roundRect(40, 40, W - 80, H - 80, 48); g.fill();
+  g.textAlign = "center"; g.fillStyle = "#14231d"; g.font = police(800, 64);
+  g.fillText((nom || "").slice(0, 28), W / 2, 150, W - 160);
+  g.fillStyle = "#5b6b64"; g.font = police(500, 34); g.fillText(T("Mes moyens de paiement PI-SPI"), W / 2, 205, W - 160);
+  const colW = (W - 120) / cols;
+  for (let i = 0; i < n; i++) {
+    const c = cles[i], col = i % cols, row = Math.floor(i / cols);
+    // Dernière ligne incomplète : on centre la clé restante.
+    const seule = cols === 2 && i === n - 1 && n % 2 === 1;
+    const cx = seule ? W / 2 : 60 + colW * col + colW / 2, y = haut + row * cellH;
+    await dessinerQrCanvas(g, c.payload, cx - cote / 2, y, cote, c.logo);
+    g.textAlign = "center"; g.fillStyle = "#14231d"; g.font = police(800, cols === 1 ? 46 : 36);
+    g.fillText((c.app || c.nom).slice(0, 24), cx, y + cote + 55, colW - 20);
+    g.fillStyle = "#5b6b64"; g.font = police(600, cols === 1 ? 32 : 26);
+    g.fillText([PAYS[c.pays] || c.pays, T("Code de vérification {code}", { code: empreinte(c) })].filter(Boolean).join(" · "), cx, y + cote + 100, colW - 20);
+  }
+  let y = haut + rows * cellH + 10;
+  g.fillStyle = "#14231d"; g.font = police(600, 30);
+  g.fillText(T("Scanne le QR de ton choix avec ton app et vérifie le nom avant de payer."), W / 2, y, W - 160);
+  g.font = police(600, 26); g.fillStyle = "#0b6b4f"; g.fillText(T("Fait avec Caabi · projet citoyen, sans lien avec la BCEAO"), W / 2, H - 80, W - 160);
   return new Promise(ok => cv.toBlob(ok, "image/png"));
 }
 
@@ -96,11 +143,16 @@ function rendre() {
     b.addEventListener("click", () => ouvrirCle(c.id));
     li.append(b); ul.append(li);
   }
+  $("btnCarte").hidden = !(onglet === "moi" && etat.cles.filter(c => c.cat === "moi").length >= 2);
   const vide = $("vide");
   vide.hidden = items.length > 0;
   vide.textContent = q ? T("Aucun résultat.")
     : onglet === "moi" ? T("Aucune clé. Ouvre ton app (Wave, Orange Money, banque), affiche ton QR PI-SPI, fais une capture d'écran puis « Scanner un QR » → « Choisir une image ».")
     : T("Ton carnet est vide. Scanne le QR PI-SPI d'un proche ou d'un marchand pour l'enregistrer.");
+  if (!items.length && !q && onglet === "moi") {
+    const b = el("button", "btn lien-sur", T("🛡️ Pourquoi c'est sûr")); b.addEventListener("click", () => $("dSur").showModal());
+    vide.append(el("br"), b);
+  }
 }
 
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
@@ -221,6 +273,7 @@ $("fSave").addEventListener("submit", e => {
   const payload = r.canal === "400" ? construire({ alias: r.alias, pays: r.pays || "SN", canal: "000" }) : r.payload;
   const c = { id: uid(), nom: f.nom.value.trim(), cat: f.cat.value, app: f.app.value.trim(), payload, alias: r.alias, pays: r.pays, canal: r.canal === "400" ? "000" : r.canal, genere: enCours.genere, ajoute: Date.now() };
   etat.cles.push(c); sauver();
+  navigator.storage?.persist?.().catch(() => {}); // Demande au navigateur de ne pas effacer les clés (aucun réseau)
   onglet = c.cat === "moi" ? "moi" : "carnet";
   document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x.dataset.tab === onglet));
   rendre(); toast(T("Enregistré : {nom}", { nom: c.nom }));
@@ -282,13 +335,7 @@ $("btnCopier").addEventListener("click", async () => {
 $("btnImage").addEventListener("click", async () => {
   const c = cleOuverte; if (!c || !qrAffiche) return;
   const blob = await imageCle(c, qrAffiche.payload, qrAffiche.montant, c.cat === "moi" && $("cleAffiche").checked);
-  const nomF = "caabi-" + c.nom.normalize("NFD").replace(/[^\w]+/g, "-").replace(/^-|-$/g, "").toLowerCase() + ".png";
-  const f = new File([blob], nomF, { type: "image/png" });
-  if (navigator.canShare?.({ files: [f] })) {
-    try { await navigator.share({ files: [f], title: c.nom }); return; } catch (e) { if (e.name === "AbortError") return; }
-  }
-  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = nomF; a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast(T("Image enregistrée"));
+  await partagerPng(blob, nomFichier(c.nom), c.nom);
 });
 $("cleAffiche").addEventListener("change", e => { if (cleOuverte) { cleOuverte.affiche = e.target.checked; sauver(); } });
 $("fLogo").addEventListener("change", async e => {
@@ -314,6 +361,96 @@ $("btnSuppr").addEventListener("click", () => {
   etat.cles = etat.cles.filter(c => c.id !== cleOuverte.id); sauver(); $("dCle").close(); toast(T("Supprimé"));
 });
 
+// ---------- Ma carte ----------
+const CLE_CARTE = "caabi.carte";
+const MAX_CARTE = 4;
+let apercuUrl = null, apercuTimer = null;
+const choixCarte = () => [...$("carteChoix").querySelectorAll("input:checked")].map(i => etat.cles.find(c => c.id === i.value)).filter(Boolean);
+async function majApercu() {
+  const sel = choixCarte(), boxes = $("carteChoix").querySelectorAll("input");
+  boxes.forEach(b => { b.disabled = !b.checked && sel.length >= MAX_CARTE; });
+  if (apercuUrl) { URL.revokeObjectURL(apercuUrl); apercuUrl = null; }
+  if (!sel.length) { $("carteApercu").hidden = true; return; }
+  apercuUrl = URL.createObjectURL(await imageCarte($("carteNom").value.trim(), sel));
+  $("carteApercu").src = apercuUrl; $("carteApercu").hidden = false;
+}
+const apercuBientot = () => { clearTimeout(apercuTimer); apercuTimer = setTimeout(majApercu, 250); };
+$("btnCarte").addEventListener("click", () => {
+  const miennes = etat.cles.filter(c => c.cat === "moi");
+  let memo = {}; try { memo = JSON.parse(localStorage.getItem(CLE_CARTE)) || {}; } catch {}
+  $("carteNom").value = memo.nom || "";
+  const box = $("carteChoix"); box.replaceChildren();
+  const coches = Array.isArray(memo.ids) && memo.ids.some(id => miennes.some(c => c.id === id)) ? memo.ids : miennes.slice(0, MAX_CARTE).map(c => c.id);
+  for (const c of miennes) {
+    const lab = el("label", "check"), inp = el("input"); inp.type = "checkbox"; inp.value = c.id; inp.checked = coches.includes(c.id);
+    inp.addEventListener("change", apercuBientot);
+    lab.append(inp, el("span", null, [c.nom, c.app, PAYS[c.pays] || c.pays].filter(Boolean).join(" · ")));
+    box.append(lab);
+  }
+  $("dCarte").showModal(); majApercu();
+});
+$("carteNom").addEventListener("input", apercuBientot);
+$("btnCartePartager").addEventListener("click", async () => {
+  const sel = choixCarte(); if (!sel.length) { toast(T("Choisis au moins une clé.")); return; }
+  const nom = $("carteNom").value.trim();
+  try { localStorage.setItem(CLE_CARTE, JSON.stringify({ nom, ids: sel.map(c => c.id) })); } catch {}
+  await partagerPng(await imageCarte(nom, sel), nomFichier(nom || "carte"), nom || "Caabi");
+});
+$("dCarte").addEventListener("close", () => { if (apercuUrl) { URL.revokeObjectURL(apercuUrl); apercuUrl = null; } });
+
+// ---------- Pourquoi c'est sûr ----------
+$("btnSur").addEventListener("click", () => $("dSur").showModal());
+$("btnSurMenu").addEventListener("click", () => { $("dMenu").close(); $("dSur").showModal(); });
+$("btnSurExport").addEventListener("click", () => $("btnExport").click());
+$("btnSurInstaller").addEventListener("click", () => { $("dSur").close(); $("dMenu").showModal(); $("hInstaller").scrollIntoView({ block: "start" }); });
+
+// ---------- Installation (Android, iPhone, navigateurs intégrés) ----------
+// Aucune donnée n'est envoyée : on lit seulement le type de navigateur pour afficher les bonnes étapes.
+const CLE_BANDEAU = "caabi.install.ferme";
+const UA = navigator.userAgent || "";
+const estInstallee = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const estIos = /iPhone|iPad|iPod/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const estIntegre = /FBAN|FBAV|FB_IAB|Instagram|Twitter|WhatsApp|Snapchat|TikTok|musical_ly|Line\//i.test(UA);
+let invite = null;
+function bandeauFerme() { try { return Date.now() - Number(localStorage.getItem(CLE_BANDEAU) || 0) < 14 * 864e5; } catch { return false; } }
+function majInstall() {
+  const ok = estInstallee();
+  $("btnInstallerMenu").hidden = ok || !invite;
+  $("dejaInstalle").hidden = !ok;
+  const mode = ok ? null : estIntegre ? "integre" : invite ? "android" : estIos ? "ios" : null;
+  const b = $("bandeau");
+  if (!mode || bandeauFerme()) { b.hidden = true; return; }
+  const txt = $("bandeauTxt"), btns = $("bandeauBtns"); txt.replaceChildren(); btns.replaceChildren();
+  if (mode === "android") {
+    txt.append(el("p", null, T("📲 Installe Caabi sur ton téléphone : ça marche sans internet.")));
+    const i = el("button", "btn primary", T("Installer")); i.addEventListener("click", installer); btns.append(i);
+  } else if (mode === "ios") {
+    txt.append(el("p", null, T("📲 Pour installer Caabi sur ton iPhone :")));
+    const ol = el("ol");
+    for (const e of ["Touche ⬆️ Partager en bas de Safari", "Choisis « Sur l'écran d'accueil »", "Touche « Ajouter »"]) ol.append(el("li", null, T(e)));
+    txt.append(ol, el("p", "aide", T("Installée, Caabi garde mieux tes clés.")));
+  } else {
+    txt.append(el("p", null, T("Ce lien est ouvert dans une autre app. Pour installer Caabi, ouvre-le dans Chrome (Android) ou Safari (iPhone).")));
+    const c = el("button", "btn", T("Copier le lien"));
+    c.addEventListener("click", async () => {
+      const lien = location.origin + location.pathname;
+      try { await navigator.clipboard.writeText(lien); toast(T("Lien copié. Colle-le dans Chrome ou Safari.")); } catch { prompt(T("Copier le lien"), lien); }
+    });
+    btns.append(c);
+  }
+  b.hidden = false;
+}
+async function installer() {
+  if (!invite) return;
+  invite.prompt();
+  try { await invite.userChoice; } catch {}
+  invite = null; majInstall();
+}
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); invite = e; majInstall(); });
+window.addEventListener("appinstalled", () => { invite = null; majInstall(); toast(T("Caabi est installée ✓")); });
+$("btnInstallerMenu").addEventListener("click", installer);
+$("bandeauFermer").addEventListener("click", () => { try { localStorage.setItem(CLE_BANDEAU, String(Date.now())); } catch {} $("bandeau").hidden = true; });
+
 // ---------- Réglages ----------
 $("btnMenu").addEventListener("click", () => $("dMenu").showModal());
 // Langue : le choix est gardé sur le téléphone. Le français reste la langue de référence.
@@ -321,7 +458,7 @@ function majLangue() {
   appliquerHtml();
   $("version").textContent = VERSION;
   document.querySelectorAll("#choixLangue [data-lang]").forEach(b => b.classList.toggle("primary", b.dataset.lang === LANG));
-  rendre();
+  rendre(); majInstall();
 }
 document.querySelectorAll("#choixLangue [data-lang]").forEach(b => b.addEventListener("click", () => { changerLangue(b.dataset.lang); majLangue(); }));
 $("btnExport").addEventListener("click", () => {

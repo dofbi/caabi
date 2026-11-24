@@ -14,7 +14,7 @@
 <body>
 <header>
   <div class="brand"><img src="icon.svg" alt="" width="34" height="34"><div><h1>Caabi</h1><p data-i18n="sousTitre">Ton trousseau PI-SPI · rien ne quitte ton téléphone</p></div></div>
-  <div class="hbtns"><button class="icon-btn" id="btnConseils" data-i18n-aria="ariaConseils" aria-label="Conseils pour payer moins de frais">💡</button><button class="icon-btn" id="btnMenu" data-i18n-aria="ariaMenu" aria-label="Réglages et informations">⋯</button></div>
+  <div class="hbtns"><button class="icon-btn" id="btnSur" data-i18n-aria="ariaSur" aria-label="Pourquoi Caabi est sûr">🛡️</button><button class="icon-btn" id="btnConseils" data-i18n-aria="ariaConseils" aria-label="Conseils pour payer moins de frais">💡</button><button class="icon-btn" id="btnMenu" data-i18n-aria="ariaMenu" aria-label="Réglages et informations">⋯</button></div>
 </header>
 
 <nav class="tabs" role="tablist">
@@ -23,6 +23,12 @@
 </nav>
 
 <main>
+  <div class="bandeau" id="bandeau" role="region" data-i18n-aria="ariaBandeau" aria-label="Installer Caabi" hidden>
+    <div class="bandeau-txt" id="bandeauTxt"></div>
+    <div class="row wrap" id="bandeauBtns"></div>
+    <button class="icon-btn petit" id="bandeauFermer" data-i18n-aria="ariaFermer" aria-label="Fermer">✕</button>
+  </div>
+  <button class="btn carte-btn" id="btnCarte" hidden data-i18n="btnCarte">🪪 Ma carte : plusieurs clés sur une image</button>
   <input type="search" id="recherche" data-i18n-ph="phRecherche" data-i18n-aria="ariaRecherche" placeholder="Chercher un nom…" aria-label="Chercher dans le carnet" hidden>
   <ul class="liste" id="liste"></ul>
   <div class="vide" id="vide"></div>
@@ -103,7 +109,7 @@
 <!-- Conseils -->
 <dialog id="dConseils" aria-labelledby="hConseils">
   <h2 id="hConseils" data-i18n="hConseils">💡 Payer moins de frais avec PI-SPI</h2>
-  <p class="aide" data-i18n="conseilsIntro">Des conseils, pas des obligations. Chiffres constatés par l'<a href="https://observatoire-pispi.netlify.app" rel="noopener">Observatoire des frais PI-SPI</a> (tests citoyens).</p>
+  <p class="aide" data-i18n="conseilsIntro">Des conseils, pas des obligations. Chiffres constatés par l'<a href="https://observatoire-pispi.org" rel="noopener">Observatoire des frais PI-SPI</a> (tests citoyens).</p>
   <div class="duo" role="table" data-i18n-aria="ariaDuo" aria-label="Conseils pour vendre et pour acheter">
     <div role="row" class="duo-star"><p role="cell" data-i18n="star">⭐ <b>Privilégiez les réseaux qui pratiquent la gratuité.</b> 0&nbsp;F constaté à l'envoi : <b>Orange Money, app Ecobank, plusieurs banques</b>. Plus vendeurs et clients s'y retrouvent, moins tout le monde paie.</p></div>
     <div class="duo-h" role="row"><b role="columnheader" data-i18n="hVendez">🏪 Vous vendez</b><b role="columnheader" data-i18n="hAchetez">🛒 Vous achetez</b></div>
@@ -117,16 +123,51 @@
   <div class="row"><button class="btn primary" data-close data-i18n="fermer">Fermer</button></div>
 </dialog>
 
+<!-- Pourquoi c'est sûr -->
+<dialog id="dSur" aria-labelledby="hSur">
+  <h2 id="hSur" data-i18n="hSur">🛡️ Pourquoi Caabi est sûr</h2>
+  <ul class="sur">
+    <li data-i18n="sur1">📵 <b>Pas de compte.</b> Pas d'e-mail, pas de mot de passe. Rien à pirater.</li>
+    <li data-i18n="sur2">🔒 <b>Rien ne sort de ton téléphone.</b> Pas de serveur, pas de statistiques. Le site est réglé pour bloquer tout envoi (c'est vérifiable).</li>
+    <li data-i18n="sur3">👀 <b>Le code est public.</b> Tout le monde peut vérifier ce que fait Caabi : <a href="https://github.com/dofbi/caabi" rel="noopener">github.com/dofbi/caabi</a>.</li>
+    <li data-i18n="sur4">🙈 <b>Ton nom n'est pas dans le QR.</b> Seule ton adresse de paiement y est.</li>
+    <li data-i18n="sur5">✅ <b>Chaque QR est vérifié</b> avant d'être enregistré : un QR abîmé ou trafiqué est refusé.</li>
+    <li data-i18n="sur6">💸 <b>Caabi ne paie jamais.</b> Tu paies dans ton app, qui affiche le vrai nom. Vérifie-le toujours.</li>
+    <li data-i18n="sur7">🏛️ <b>Pas un service officiel.</b> Pas de logo BCEAO : méfie-toi de qui s'en sert pour paraître officiel.</li>
+    <li class="revers" data-i18n="sur8">⚠️ <b>Le revers :</b> si tu perds ton téléphone, tu perds tes clés. Garde une copie, et installe Caabi.</li>
+  </ul>
+  <div class="row wrap">
+    <button class="btn" id="btnSurExport" data-i18n="exporter">⬇️ Exporter mes clés</button>
+    <button class="btn" id="btnSurInstaller" data-i18n="btnVoirInstaller">📲 Installer Caabi</button>
+  </div>
+  <div class="row"><button class="btn primary" data-close data-i18n="fermer">Fermer</button></div>
+</dialog>
+
+<!-- Ma carte : plusieurs clés sur une image -->
+<dialog id="dCarte" aria-labelledby="hCarte">
+  <h2 id="hCarte" data-i18n="hCarte">🪪 Ma carte</h2>
+  <p class="aide" data-i18n="carteAide">Comme un lien de profil, mais sans serveur : l'image est fabriquée sur ton téléphone. Envoie-la sur WhatsApp.</p>
+  <label><span data-i18n="carteNom">Ton nom sur la carte</span> <input id="carteNom" maxlength="40" data-i18n-ph="phNom" placeholder="ex. Tata Awa, Boutique Modou, Mon Wave"></label>
+  <fieldset class="carte-choix"><legend data-i18n="carteChoix">Clés à mettre (4 au plus)</legend><div id="carteChoix"></div></fieldset>
+  <img id="carteApercu" alt="" hidden>
+  <div class="row"><button class="btn primary" id="btnCartePartager" data-i18n="partagerCarte">📤 Partager la carte</button><button class="btn" data-close data-i18n="annuler">Annuler</button></div>
+</dialog>
+
 <!-- Réglages -->
 <dialog id="dMenu" aria-labelledby="hMenu">
   <h2 id="hMenu">Caabi</h2>
   <p data-i18n="menuIntro">Caabi (« clé » en wolof) range tes QR PI-SPI et ceux des gens que tu paies souvent.</p>
+  <p data-i18n="menuResume"><b>Sans compte, sans serveur :</b> tes clés restent sur ce téléphone. Caabi ne paie pas : tu paies dans ton app. Projet citoyen, sans lien avec la BCEAO ni avec les opérateurs.</p>
+  <div class="row"><button class="btn" id="btnSurMenu" data-i18n="btnSurMenu">🛡️ Pourquoi Caabi est sûr</button></div>
+  <h3 id="hInstaller" data-i18n="hInstaller">📲 Installer Caabi</h3>
+  <p class="aide" data-i18n="installPourquoi">Une icône sur ton écran d'accueil, ça marche sans internet, et tes clés sont mieux protégées.</p>
   <ul class="puces">
-    <li data-i18n="menuP1"><b>Rien n'est envoyé</b> : pas de compte, pas de serveur, pas de statistiques. Tes clés restent dans ce navigateur.</li>
-    <li data-i18n="menuP2"><b>Caabi ne paie pas</b> : il montre ou lit un QR. Le paiement se fait toujours dans ton app (Wave, Orange Money, banque…).</li>
-    <li data-i18n="menuP3"><b>Avant de payer</b>, vérifie toujours le nom du bénéficiaire affiché par ton app.</li>
-    <li data-i18n="menuP4">Projet citoyen, sans lien avec la BCEAO ni avec les opérateurs.</li>
+    <li data-i18n="installAndroid"><b>Android</b> (Chrome) : menu ⋮ en haut à droite → « Installer l'application » ou « Ajouter à l'écran d'accueil ».</li>
+    <li data-i18n="installIphone"><b>iPhone</b> (Safari) : touche ⬆️ Partager en bas → « Sur l'écran d'accueil » → « Ajouter ».</li>
+    <li data-i18n="installInApp">Lien ouvert dans WhatsApp, X ou Facebook ? Ouvre-le d'abord dans Chrome ou Safari.</li>
   </ul>
+  <div class="row"><button class="btn primary" id="btnInstallerMenu" hidden data-i18n="btnInstallerMenu">📲 Installer maintenant</button></div>
+  <p class="aide" id="dejaInstalle" hidden data-i18n="dejaInstalle">✓ Caabi est déjà installée sur ce téléphone.</p>
   <h3 data-i18n="langue">Langue</h3>
   <div class="row wrap" id="choixLangue"><button class="btn" data-lang="fr" lang="fr">Français</button><button class="btn" data-lang="wo" lang="wo">Wolof</button></div>
   <h3 data-i18n="hSauvegarde">Sauvegarde</h3>

@@ -94,3 +94,21 @@ label.check input{margin-top:3px;width:18px;height:18px;flex:none}
 @media (prefers-color-scheme:dark){.duo>div>p:first-child{background:#173a2e}.duo>div>p:last-child{background:#3a2e17}}
 .duo>.duo-star{grid-template-columns:1fr}
 .duo-star p{background:transparent!important;border:2px solid #0b6b4f;font-size:.95rem!important}
+
+/* v0.5 : bandeau d'installation, « pourquoi c'est sûr », carte multi-clés */
+.bandeau{position:relative;background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--r);padding:12px 52px 12px 14px;margin-bottom:12px}
+.bandeau p{margin:0 0 6px;font-weight:600}
+.bandeau p.aide{font-weight:500;margin-top:6px}
+.bandeau ol{margin:4px 0;padding-left:20px}
+.bandeau .row{margin-top:8px}
+.icon-btn.petit{position:absolute;top:8px;right:8px;width:36px;height:36px;font-size:1rem}
+.carte-btn{width:100%;margin-bottom:10px}
+.sur{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.sur li{padding:10px 12px;border-radius:12px;background:var(--bg);font-size:.95rem}
+.sur li.revers{background:var(--mid-soft)}
+.lien-sur{margin-top:12px}
+fieldset.carte-choix{border:0;padding:0;margin:12px 0 0}
+fieldset.carte-choix legend{font-weight:600;font-size:.9rem;margin-bottom:4px}
+#carteChoix{display:grid;gap:4px}
+#carteChoix label{margin-top:4px}
+#carteApercu{display:block;width:100%;max-width:360px;margin:14px auto 0;border-radius:12px;border:1px solid var(--line)}
