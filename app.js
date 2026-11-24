@@ -1,7 +1,7 @@
 import { lire, construire, empreinte, CANAUX } from "./emv.js";
-import { T, LANG, appliquerHtml, changerLangue } from "./i18n.js";
+import { T, LANG, appliquerHtml, changerLangue, LANGUES, LANGUES_PAYS, LANGUE_COMMUNE, traduite } from "./i18n.js";
 
-const VERSION = "0.5.0";
+const VERSION = "0.6.0";
 const KEY = "caabi.v1";
 const $ = id => document.getElementById(id);
 const PAYS = { SN: "Sénégal", CI: "Côte d'Ivoire", ML: "Mali", BF: "Burkina Faso", NE: "Niger", TG: "Togo", BJ: "Bénin", GW: "Guinée-Bissau" };
@@ -41,6 +41,8 @@ function qrSvg(payload, logo) {
 
 // Image à partager : nom, QR avec logo, code de vérification, montant. Fabriquée sur le téléphone, rien n'est envoyé.
 function chargerImage(src) { return new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = src; }); }
+// Couleur des images partagées : celle choisie par l'utilisateur (couleur.js), assombrie si besoin pour rester lisible.
+const teinte = () => window.CaabiCouleur?.image() || { accent: "#0b6b4f", doux: "#e3f1ea" };
 const police = (w, px) => `${w} ${px}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
 // Dessine un QR (avec sa marge blanche et le logo au centre) dans un carré de côté « cote ».
 async function dessinerQrCanvas(g, payload, x0, y0, cote, logo) {
@@ -68,7 +70,7 @@ async function partagerPng(blob, nomF, titre) {
 async function imageCle(c, payload, montant, affiche) {
   const W = 1080, H = affiche ? 1840 : 1500, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const g = cv.getContext("2d"), font = police;
-  g.fillStyle = "#0b6b4f"; g.fillRect(0, 0, W, H);
+  g.fillStyle = teinte().accent; g.fillRect(0, 0, W, H);
   g.fillStyle = "#fff"; g.beginPath(); g.roundRect(40, 40, W - 80, H - 80, 48); g.fill();
   g.textAlign = "center"; g.fillStyle = "#14231d";
   g.font = font(800, 64); g.fillText(c.nom.slice(0, 28), W / 2, 150, W - 160);
@@ -84,13 +86,13 @@ async function imageCle(c, payload, montant, affiche) {
   g.fillText(T("et vérifie le nom affiché avant de payer."), W / 2, y, W - 160);
   if (affiche) {
     // Message sur les frais : règle BCEAO (gratuit jusqu'à 8 000 F par jour, réception gratuite).
-    y += 40; g.fillStyle = "#e3f1ea"; g.beginPath(); g.roundRect(90, y, W - 180, 270, 32); g.fill();
-    g.fillStyle = "#0b6b4f"; g.font = font(800, 50); g.fillText(T("Payez-moi par PI-SPI"), W / 2, y + 70, W - 220);
+    y += 40; g.fillStyle = teinte().doux; g.beginPath(); g.roundRect(90, y, W - 180, 270, 32); g.fill();
+    g.fillStyle = teinte().accent; g.font = font(800, 50); g.fillText(T("Payez-moi par PI-SPI"), W / 2, y + 70, W - 220);
     g.fillStyle = "#14231d"; g.font = font(500, 32); g.fillText(T("depuis Wave, Orange Money ou votre banque"), W / 2, y + 120, W - 220);
     g.font = font(800, 40); g.fillText(T("0 F de frais jusqu'à 8 000 F par jour"), W / 2, y + 180, W - 220);
     g.fillStyle = "#5b6b64"; g.font = font(500, 26); g.fillText(T("Règle BCEAO · vérifiez les frais sur votre écran avant de valider"), W / 2, y + 230, W - 220);
   }
-  g.font = font(600, 26); g.fillStyle = "#0b6b4f"; g.fillText(T("Fait avec Caabi · projet citoyen, sans lien avec la BCEAO"), W / 2, H - 80, W - 160);
+  g.font = font(600, 26); g.fillStyle = teinte().accent; g.fillText(T("Fait avec Caabi · projet citoyen, sans lien avec la BCEAO"), W / 2, H - 80, W - 160);
   return new Promise(ok => cv.toBlob(ok, "image/png"));
 }
 
@@ -100,7 +102,7 @@ async function imageCarte(nom, cles) {
   const cote = cols === 1 ? 760 : 430, cellH = cote + 150, haut = 250, H = haut + rows * cellH + 190;
   const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const g = cv.getContext("2d");
-  g.fillStyle = "#0b6b4f"; g.fillRect(0, 0, W, H);
+  g.fillStyle = teinte().accent; g.fillRect(0, 0, W, H);
   g.fillStyle = "#fff"; g.beginPath(); g.roundRect(40, 40, W - 80, H - 80, 48); g.fill();
   g.textAlign = "center"; g.fillStyle = "#14231d"; g.font = police(800, 64);
   g.fillText((nom || "").slice(0, 28), W / 2, 150, W - 160);
@@ -120,7 +122,7 @@ async function imageCarte(nom, cles) {
   let y = haut + rows * cellH + 10;
   g.fillStyle = "#14231d"; g.font = police(600, 30);
   g.fillText(T("Scanne le QR de ton choix avec ton app et vérifie le nom avant de payer."), W / 2, y, W - 160);
-  g.font = police(600, 26); g.fillStyle = "#0b6b4f"; g.fillText(T("Fait avec Caabi · projet citoyen, sans lien avec la BCEAO"), W / 2, H - 80, W - 160);
+  g.font = police(600, 26); g.fillStyle = teinte().accent; g.fillText(T("Fait avec Caabi · projet citoyen, sans lien avec la BCEAO"), W / 2, H - 80, W - 160);
   return new Promise(ok => cv.toBlob(ok, "image/png"));
 }
 
@@ -453,14 +455,91 @@ $("bandeauFermer").addEventListener("click", () => { try { localStorage.setItem(
 
 // ---------- Réglages ----------
 $("btnMenu").addEventListener("click", () => $("dMenu").showModal());
-// Langue : le choix est gardé sur le téléphone. Le français reste la langue de référence.
+// Langue : le français est la langue commune ; on peut choisir une langue du pays. Choix gardé sur le téléphone.
+// Les langues pas encore traduites sont affichées « bientôt », avec un appel à l'aide (docs/TRADUIRE.md).
+const CLE_PAYS_LANGUE = "caabi.paysLangue";
+const LIEN_TRADUIRE = "https://github.com/dofbi/caabi/blob/main/docs/TRADUIRE.md";
+function paysLangueDefaut() {
+  try { const p = localStorage.getItem(CLE_PAYS_LANGUE); if (LANGUES_PAYS[p]) return p; } catch {}
+  if (LANG !== "fr") { const p = Object.keys(LANGUES_PAYS).find(k => LANGUES_PAYS[k].includes(LANG)); if (p) return p; }
+  const n = {}; for (const c of etat.cles) if (LANGUES_PAYS[c.pays]) n[c.pays] = (n[c.pays] || 0) + 1;
+  return Object.keys(n).sort((a, b) => n[b] - n[a])[0] || "SN";
+}
+function puceLangue(code, commune) {
+  const L = LANGUES[code], b = el("button", "btn puce");
+  b.lang = code; b.dataset.lang = code;
+  b.append(el("span", null, L.nom));
+  if (commune) b.append(el("small", null, " · " + T("langue commune")));
+  if (!traduite(code)) { b.classList.add("bientot"); b.setAttribute("aria-disabled", "true"); b.append(el("small", null, " · " + T("bientôt"))); }
+  b.classList.toggle("primary", code === LANG);
+  b.setAttribute("aria-pressed", String(code === LANG));
+  b.addEventListener("click", () => {
+    if (traduite(code)) { $("langueAide").hidden = true; changerLangue(code); majLangue(); return; }
+    const aide = $("langueAide"); aide.replaceChildren(T("Pas encore traduit. Tu parles {langue} ? Aide-nous à traduire Caabi : ", { langue: L.nom }));
+    const a = el("a", null, T("comment faire")); a.href = LIEN_TRADUIRE; a.rel = "noopener"; a.target = "_blank";
+    aide.append(a); aide.hidden = false;
+  });
+  return b;
+}
+function rendreLangues() {
+  const fr = $("choixLangue").querySelector('[data-lang="fr"]');
+  fr.classList.toggle("primary", LANG === "fr"); fr.setAttribute("aria-pressed", String(LANG === "fr"));
+  const p = $("paysLangue").value, box = $("languesPays"); box.replaceChildren();
+  for (const code of LANGUES_PAYS[p] || []) box.append(puceLangue(code, LANGUE_COMMUNE[p] === code));
+}
 function majLangue() {
   appliquerHtml();
   $("version").textContent = VERSION;
-  document.querySelectorAll("#choixLangue [data-lang]").forEach(b => b.classList.toggle("primary", b.dataset.lang === LANG));
+  rendreLangues(); rendrePastilles();
   rendre(); majInstall();
 }
-document.querySelectorAll("#choixLangue [data-lang]").forEach(b => b.addEventListener("click", () => { changerLangue(b.dataset.lang); majLangue(); }));
+$("choixLangue").querySelector('[data-lang="fr"]').addEventListener("click", () => { $("langueAide").hidden = true; changerLangue("fr"); majLangue(); });
+$("paysLangue").value = paysLangueDefaut();
+$("paysLangue").addEventListener("change", e => { try { localStorage.setItem(CLE_PAYS_LANGUE, e.target.value); } catch {} $("langueAide").hidden = true; rendreLangues(); });
+
+// ---------- Couleur ----------
+function rendrePastilles() {
+  const C = window.CaabiCouleur, box = $("pastilles"); if (!C) return;
+  box.replaceChildren();
+  const actu = C.base();
+  for (const [hexa, nom] of C.PALETTE) {
+    const b = el("button", "pastille"); b.type = "button"; b.dataset.couleur = hexa;
+    b.setAttribute("aria-label", T(nom)); b.title = T(nom);
+    b.style.setProperty("--p", hexa);
+    b.setAttribute("aria-pressed", String(actu === hexa));
+    b.addEventListener("click", () => { C.appliquer(hexa); rendrePastilles(); });
+    box.append(b);
+  }
+  const autre = el("label", "pastille autre"); autre.title = T("Autre couleur");
+  const perso = !C.PALETTE.some(([h]) => h === actu);
+  autre.setAttribute("aria-pressed", String(perso));
+  if (perso) autre.style.setProperty("--p", actu);
+  const inp = el("input"); inp.type = "color"; inp.value = actu; inp.setAttribute("aria-label", T("Autre couleur"));
+  inp.addEventListener("change", e => { C.appliquer(e.target.value); rendrePastilles(); });
+  autre.append(el("span", null, "＋"), inp);
+  box.append(autre);
+}
+
+// ---------- Partager Caabi ----------
+const lienApp = () => location.origin + location.pathname.replace(/[^/]*$/, "");
+function ouvrirPartage() {
+  const url = lienApp();
+  $("partageQr").innerHTML = qrSvg(url);
+  $("partageLien").textContent = url.replace(/^https?:\/\//, "");
+  $("lienWhatsapp").href = "https://wa.me/?text=" + encodeURIComponent(T("Caabi : range tes QR PI-SPI (Wave, Orange Money, banques). Sans compte, rien ne quitte ton téléphone.") + " " + url);
+  document.querySelectorAll("dialog[open]").forEach(d => d.close());
+  $("dPartage").showModal();
+}
+$("btnPartageMenu").addEventListener("click", ouvrirPartage);
+$("btnSurPartage").addEventListener("click", ouvrirPartage);
+$("btnPartager").addEventListener("click", async () => {
+  const url = lienApp(), text = T("Caabi : range tes QR PI-SPI (Wave, Orange Money, banques). Sans compte, rien ne quitte ton téléphone.");
+  if (navigator.share) { try { await navigator.share({ title: "Caabi", text, url }); return; } catch (e) { if (e.name === "AbortError") return; } }
+  $("btnCopierLienApp").click();
+});
+$("btnCopierLienApp").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(lienApp()); toast(T("Lien copié")); } catch { prompt(T("Copier le lien"), lienApp()); }
+});
 $("btnExport").addEventListener("click", () => {
   const blob = new Blob([JSON.stringify({ app: "caabi", version: 1, exporte: new Date().toISOString(), cles: etat.cles }, null, 1)], { type: "application/json" });
   const a = el("a"); a.href = URL.createObjectURL(blob); a.download = "caabi-sauvegarde.json"; a.click();

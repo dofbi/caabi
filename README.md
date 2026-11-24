@@ -9,7 +9,9 @@ Caabi (« clé » en wolof) est une petite application web (PWA) pour ranger ses
 - **Affiche boutique** : ajoute à l'image « Payez-moi par PI-SPI, 0 F de frais jusqu'à 8 000 F par jour » (règle BCEAO), à imprimer ou partager.
 - **Ma carte 🪪** : plusieurs de tes clés (Wave, Orange Money, banque…) sur une seule image à envoyer sur WhatsApp. Comme un lien de profil, mais sans serveur : l'image est fabriquée sur le téléphone, sans numéro de téléphone.
 - **Conseils 💡** : ce qu'il faut faire pour payer moins de frais quand on vend ou quand on achète, d'après l'[Observatoire des frais PI-SPI](https://observatoire-pispi.org).
-- **Wolof** : toute l'app existe en wolof (orthographe officielle, mot français entre parenthèses pour les termes techniques). Choix de la langue dans le menu ⋯, gardé sur le téléphone.
+- **Langues** : le français est la langue commune ; on peut choisir une langue de son pays. Le **wolof** est traduit ; les autres langues nationales des 8 pays UEMOA sont affichées « bientôt ». Pour en ajouter une : [docs/TRADUIRE.md](docs/TRADUIRE.md).
+- **Ma couleur 🎨** : 8 couleurs ou une couleur libre, pour l'app et les images partagées. Les contrastes sont recalculés pour rester lisibles (WCAG 4,5:1).
+- **Partager Caabi 📤** : envoyer le lien (WhatsApp, partage du téléphone) ou faire scanner le QR de l'app.
 - **Vérification** : chaque QR est contrôlé (identifiant de schéma `int.bceao.pi` et somme de contrôle CRC16) avant d'être enregistré.
 
 ## Ce que Caabi ne fait pas

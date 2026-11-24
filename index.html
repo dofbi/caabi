@@ -10,6 +10,7 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="style.css">
+<script src="couleur.js"></script>
 </head>
 <body>
 <header>
@@ -139,6 +140,7 @@
   <div class="row wrap">
     <button class="btn" id="btnSurExport" data-i18n="exporter">⬇️ Exporter mes clés</button>
     <button class="btn" id="btnSurInstaller" data-i18n="btnVoirInstaller">📲 Installer Caabi</button>
+    <button class="btn" id="btnSurPartage" data-i18n="btnPartage">📤 Partager Caabi</button>
   </div>
   <div class="row"><button class="btn primary" data-close data-i18n="fermer">Fermer</button></div>
 </dialog>
@@ -153,9 +155,25 @@
   <div class="row"><button class="btn primary" id="btnCartePartager" data-i18n="partagerCarte">📤 Partager la carte</button><button class="btn" data-close data-i18n="annuler">Annuler</button></div>
 </dialog>
 
+<!-- Partager Caabi -->
+<dialog id="dPartage" aria-labelledby="hPartage">
+  <h2 id="hPartage" data-i18n="hPartage">📤 Partager Caabi</h2>
+  <p class="aide" data-i18n="partageAide">Fais connaître Caabi : envoie le lien, ou fais scanner ce QR à la personne à côté de toi.</p>
+  <div class="qr qr-app" id="partageQr"></div>
+  <p class="aide centre" data-i18n="partageQrNote">QR pour ouvrir l'app, <b>pas un QR de paiement</b>.</p>
+  <p class="lien-app" id="partageLien"></p>
+  <div class="row wrap">
+    <button class="btn primary" id="btnPartager" data-i18n="btnPartagerLien">📤 Envoyer le lien</button>
+    <a class="btn" id="lienWhatsapp" target="_blank" rel="noopener" data-i18n="whatsapp">💬 WhatsApp</a>
+    <button class="btn" id="btnCopierLienApp" data-i18n="copierLien">📋 Copier le lien</button>
+  </div>
+  <div class="row"><button class="btn" data-close data-i18n="fermer">Fermer</button></div>
+</dialog>
+
 <!-- Réglages -->
 <dialog id="dMenu" aria-labelledby="hMenu">
   <h2 id="hMenu">Caabi</h2>
+  <div class="row"><button class="btn primary" id="btnPartageMenu" data-i18n="btnPartage">📤 Partager Caabi</button></div>
   <p data-i18n="menuIntro">Caabi (« clé » en wolof) range tes QR PI-SPI et ceux des gens que tu paies souvent.</p>
   <p data-i18n="menuResume"><b>Sans compte, sans serveur :</b> tes clés restent sur ce téléphone. Caabi ne paie pas : tu paies dans ton app. Projet citoyen, sans lien avec la BCEAO ni avec les opérateurs.</p>
   <div class="row"><button class="btn" id="btnSurMenu" data-i18n="btnSurMenu">🛡️ Pourquoi Caabi est sûr</button></div>
@@ -169,7 +187,16 @@
   <div class="row"><button class="btn primary" id="btnInstallerMenu" hidden data-i18n="btnInstallerMenu">📲 Installer maintenant</button></div>
   <p class="aide" id="dejaInstalle" hidden data-i18n="dejaInstalle">✓ Caabi est déjà installée sur ce téléphone.</p>
   <h3 data-i18n="langue">Langue</h3>
-  <div class="row wrap" id="choixLangue"><button class="btn" data-lang="fr" lang="fr">Français</button><button class="btn" data-lang="wo" lang="wo">Wolof</button></div>
+  <p class="aide" data-i18n="langueCommune">Le français est la langue commune. Tu peux aussi choisir une langue de ton pays.</p>
+  <div class="langues" id="choixLangue"><button class="btn puce" data-lang="fr" lang="fr">Français</button></div>
+  <label class="ligne-pays"><span data-i18n="languesDe">Langues de</span> <select id="paysLangue">
+    <option value="SN">Sénégal</option><option value="CI">Côte d'Ivoire</option><option value="ML">Mali</option><option value="BF">Burkina Faso</option>
+    <option value="NE">Niger</option><option value="TG">Togo</option><option value="BJ">Bénin</option><option value="GW">Guinée-Bissau</option></select></label>
+  <div class="langues" id="languesPays"></div>
+  <p class="aide" id="langueAide" hidden></p>
+  <h3 data-i18n="hCouleur">🎨 Ma couleur</h3>
+  <div class="pastilles" id="pastilles" role="group" data-i18n-aria="hCouleurAria" aria-label="Choisir la couleur de l'app"></div>
+  <p class="aide" data-i18n="couleurAide">Elle colore l'app et les images que tu partages. Le texte reste toujours lisible.</p>
   <h3 data-i18n="hSauvegarde">Sauvegarde</h3>
   <p class="aide" data-i18n="sauvegardeAide">Si tu changes de téléphone ou vides le navigateur, tes clés disparaissent. Garde une copie.</p>
   <div class="row wrap">
